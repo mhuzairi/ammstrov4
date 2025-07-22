@@ -307,12 +307,9 @@ function App() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.8, delay: 0.8 }}
               >
-                <p className="text-slate-400 mb-6">Trusted by 100+ aviation companies worldwide</p>
+                <p className="text-slate-400 mb-6">Trusted by aviation companies worldwide</p>
                 <div className="grid grid-cols-2 md:flex md:justify-center md:items-center gap-4 md:gap-8 opacity-60">
-                  <div className="text-lg md:text-2xl font-bold text-center">AirAsia</div>
-                  <div className="text-lg md:text-2xl font-bold text-center">Malaysia Airlines</div>
-                  <div className="text-lg md:text-2xl font-bold text-center">Garuda Indonesia</div>
-                  <div className="text-lg md:text-2xl font-bold text-center">Thai Airways</div>
+                  {/* Airline references removed */}
                 </div>
               </motion.div>
 
