@@ -190,8 +190,8 @@ function App() {
             </div>
 
             <nav className="hidden md:flex items-center space-x-8">
-              {['Hero', 'Product', 'How it Works', 'Features', 'Company', 'FAQ'].map((item, index) => {
-                const sectionId = item.toLowerCase().replace(/\s+/g, '-')
+              {['Home', 'Product', 'How it Works', 'Features', 'Company', 'FAQ'].map((item, index) => {
+                const sectionId = item === 'Home' ? 'hero' : item.toLowerCase().replace(/\s+/g, '-')
                 return (
                   <a
                     key={index}
@@ -228,8 +228,8 @@ function App() {
           {mobileMenuOpen && (
             <div className="md:hidden py-4 border-t border-slate-200">
               <nav className="flex flex-col space-y-4">
-                {['Hero', 'Product', 'How it Works', 'Features', 'Company', 'FAQ'].map((item, index) => {
-                  const sectionId = item.toLowerCase().replace(/\s+/g, '-')
+                {['Home', 'Product', 'How it Works', 'Features', 'Company', 'FAQ'].map((item, index) => {
+                  const sectionId = item === 'Home' ? 'hero' : item.toLowerCase().replace(/\s+/g, '-')
                   return (
                     <a
                       key={index}
@@ -1551,8 +1551,7 @@ function App() {
             </button>
             
             {/* Header */}
-            <div className="bg-gradient-to-r from-sky-600 to-blue-700 text-white p-4">
-              <h3 className="text-xl font-bold">Get Started with AMMSTRO</h3>
+            <div className="bg-gradient-to-r from-sky-600 to-blue-700 text-white p-2">
               <p className="text-sky-100 text-sm">Begin your aviation maintenance transformation journey</p>
             </div>
             
@@ -1564,7 +1563,7 @@ function App() {
                 title="AMMSTRO Get Started"
                 frameBorder="0"
                 allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                style={{ height: 'calc(90vh - 80px)' }}
+                style={{ height: 'calc(90vh - 40px)' }}
               ></iframe>
             </div>
           </motion.div>
