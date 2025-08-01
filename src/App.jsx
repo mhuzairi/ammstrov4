@@ -33,6 +33,7 @@ function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState(0)
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
+  const [isGetStartedModalOpen, setIsGetStartedModalOpen] = useState(false)
   
   // Array of rotating announcements
   const announcements = [
@@ -206,7 +207,10 @@ function App() {
             </nav>
 
             <div className="flex items-center space-x-4">
-              <Button className="hidden md:flex bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600">
+              <Button 
+                className="hidden md:flex bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                onClick={() => setIsGetStartedModalOpen(true)}
+              >
                 Get Started
               </Button>
               
@@ -239,7 +243,10 @@ function App() {
                     </a>
                   )
                 })}
-                <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 w-full mt-2">
+                <Button 
+                  className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 w-full mt-2"
+                  onClick={() => setIsGetStartedModalOpen(true)}
+                >
                   Get Started
                 </Button>
               </nav>
@@ -326,7 +333,10 @@ function App() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
               >
-                <Button className="bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-700 hover:to-sky-800 text-white px-8 py-6 text-lg">
+                <Button 
+                  className="bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-700 hover:to-sky-800 text-white px-8 py-6 text-lg"
+                  onClick={() => setIsGetStartedModalOpen(true)}
+                >
                   Get Started
                 </Button>
                 <Button 
@@ -1510,6 +1520,50 @@ function App() {
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
+              ></iframe>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Get Started Modal */}
+      {isGetStartedModalOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+          onClick={() => setIsGetStartedModalOpen(false)}
+        >
+          <motion.div
+            className="relative w-full max-w-6xl mx-4 bg-white rounded-lg overflow-hidden shadow-2xl"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.3 }}
+            onClick={(e) => e.stopPropagation()}
+            style={{ height: '90vh' }}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setIsGetStartedModalOpen(false)}
+              className="absolute top-4 right-4 z-10 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75 transition-all"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            
+            {/* Header */}
+            <div className="bg-gradient-to-r from-sky-600 to-blue-700 text-white p-4">
+              <h3 className="text-xl font-bold">Get Started with AMMSTRO</h3>
+              <p className="text-sky-100 text-sm">Begin your aviation maintenance transformation journey</p>
+            </div>
+            
+            {/* Website Container */}
+            <div className="relative w-full h-full">
+              <iframe
+                className="w-full h-full"
+                src="https://getstarted.ammstro.com"
+                title="AMMSTRO Get Started"
+                frameBorder="0"
+                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                style={{ height: 'calc(90vh - 80px)' }}
               ></iframe>
             </div>
           </motion.div>
