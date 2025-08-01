@@ -32,6 +32,7 @@ function App() {
   const [activeSection, setActiveSection] = useState('hero')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState(0)
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
   
   // Array of rotating announcements
   const announcements = [
@@ -331,7 +332,7 @@ function App() {
                 <Button 
                   variant="outline" 
                   className="border-slate-300 text-slate-700 hover:bg-slate-100 px-8 py-6 text-lg"
-                  onClick={() => window.open('https://youtu.be/U8CswzvK9Zc?si=gKkkG2ior_5PNSdC', '_blank')}
+                  onClick={() => setIsVideoModalOpen(true)}
                 >
                   <Play className="w-5 h-5 mr-2" /> Watch Demo
                 </Button>
@@ -1477,6 +1478,43 @@ function App() {
           </div>
         </div>
       </footer>
+
+      {/* Video Modal */}
+      {isVideoModalOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+          onClick={() => setIsVideoModalOpen(false)}
+        >
+          <motion.div
+            className="relative w-full max-w-4xl mx-4 bg-black rounded-lg overflow-hidden"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.3 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setIsVideoModalOpen(false)}
+              className="absolute top-4 right-4 z-10 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75 transition-all"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            
+            {/* Video Container */}
+            <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+              <iframe
+                className="absolute top-0 left-0 w-full h-full"
+                src="https://www.youtube.com/embed/U8CswzvK9Zc?si=gKkkG2ior_5PNSdC&autoplay=1"
+                title="AMMSTRO Demo Video"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              ></iframe>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   )
 }
