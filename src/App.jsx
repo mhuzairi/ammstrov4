@@ -304,8 +304,9 @@ function App() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.5 }}
+                  className="flex justify-center px-4"
                 >
-                  <Badge className="bg-sky-100 text-sky-700 border-sky-300 px-4 py-2 cursor-pointer shadow-sm">
+                  <Badge className="bg-sky-100 text-sky-700 border-sky-300 px-3 py-2 cursor-pointer shadow-sm text-xs sm:text-sm text-center max-w-full break-words">
                     {announcements[currentAnnouncementIndex]}
                   </Badge>
                 </motion.div>
@@ -317,10 +318,10 @@ function App() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
               >
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mt-6 mb-6 text-slate-800">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mt-6 mb-6 text-slate-800 text-center lg:text-left px-4 lg:px-0">
                   AI-Powered <span className="bg-gradient-to-r from-sky-600 to-orange-500 bg-clip-text text-transparent">Aviation</span> Maintenance
                 </h1>
-                <p className="text-xl text-slate-600 mb-8">
+                <p className="text-lg sm:text-xl text-slate-600 mb-8 text-center lg:text-left px-4 lg:px-0 leading-relaxed">
                   Revolutionize your aircraft maintenance operations with our AI-powered platform. 
                   Reduce downtime, increase efficiency, and enhance safety.
                 </p>
@@ -328,23 +329,23 @@ function App() {
 
               {/* CTA Buttons */}
               <motion.div
-                className="flex flex-col sm:flex-row gap-4 justify-center"
+                className="flex flex-col sm:flex-row gap-4 justify-center px-4 lg:px-0"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
               >
                 <Button 
-                  className="bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-700 hover:to-sky-800 text-white px-8 py-6 text-lg"
+                  className="bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-700 hover:to-sky-800 text-white px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg w-full sm:w-auto"
                   onClick={() => setIsGetStartedModalOpen(true)}
                 >
                   Get Started
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="border-slate-300 text-slate-700 hover:bg-slate-100 px-8 py-6 text-lg"
+                  className="border-slate-300 text-slate-700 hover:bg-slate-100 px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg w-full sm:w-auto"
                   onClick={() => setIsVideoModalOpen(true)}
                 >
-                  <Play className="w-5 h-5 mr-2" /> Watch Demo
+                  <Play className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> Watch Demo
                 </Button>
               </motion.div>
 
@@ -368,7 +369,7 @@ function App() {
                 animate={{ y: 0 }}
                 transition={{ duration: 1, delay: 0.9 }}
               >
-                <h3 className="text-xl font-semibold text-slate-700 mb-4 text-center">Powering Commercial Aviation Maintenance</h3>
+                <h3 className="text-lg sm:text-xl font-semibold text-slate-700 mb-4 text-center">Powering Commercial Aviation Maintenance</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <motion.div
                     className="relative overflow-hidden rounded-xl shadow-lg"
@@ -416,59 +417,59 @@ function App() {
 
             {/* Dashboard Preview */}
             <motion.div
-              className="mt-8"
+              className="mt-8 px-4 lg:px-0"
             >
               <div className="bg-slate-800 rounded-xl overflow-hidden shadow-2xl border border-slate-700">
-                <div className="bg-slate-900 px-6 py-4 border-b border-slate-700 flex items-center justify-between">
+                <div className="bg-slate-900 px-4 sm:px-6 py-4 border-b border-slate-700 flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <div className="w-3 h-3 rounded-full bg-red-500"></div>
                     <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                     <div className="w-3 h-3 rounded-full bg-green-500"></div>
                   </div>
-                  <div className="text-slate-400 text-sm">AMMSTRO Dashboard</div>
+                  <div className="text-slate-400 text-xs sm:text-sm">AMMSTRO Dashboard</div>
                   <div className="text-slate-400">
                     <Calendar className="w-4 h-4" />
                   </div>
                 </div>
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-white text-lg font-bold">Fleet Overview</h3>
-                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30">Live Data</Badge>
+                    <h3 className="text-white text-base sm:text-lg font-bold">Fleet Overview</h3>
+                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">Live Data</Badge>
                   </div>
                   
-                  <div className="grid grid-cols-3 gap-4 mb-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
                     <motion.div 
-                      className="bg-sky-500/10 border border-sky-500/20 rounded-lg p-4"
+                      className="bg-sky-500/10 border border-sky-500/20 rounded-lg p-3 sm:p-4"
                       whileHover={{ scale: 1.03 }}
                     >
-                      <div className="text-sky-400 mb-2 text-sm font-medium">Fleet Availability</div>
-                      <div className="text-2xl font-bold text-white">86%</div>
+                      <div className="text-sky-400 mb-2 text-xs sm:text-sm font-medium">Fleet Availability</div>
+                      <div className="text-xl sm:text-2xl font-bold text-white">86%</div>
                       <div className="text-sky-400/70 text-xs mt-1">↑ 2.1% from last month</div>
                     </motion.div>
                     
                     <motion.div 
-                      className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4"
+                      className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 sm:p-4"
                       whileHover={{ scale: 1.03 }}
                     >
-                      <div className="text-emerald-400 mb-2 text-sm font-medium">Cost Reduction</div>
-                      <div className="text-2xl font-bold text-white">35%</div>
+                      <div className="text-emerald-400 mb-2 text-xs sm:text-sm font-medium">Cost Reduction</div>
+                      <div className="text-xl sm:text-2xl font-bold text-white">35%</div>
                       <div className="text-emerald-400/70 text-xs mt-1">↑ 5% from last quarter</div>
                     </motion.div>
                     
                     <motion.div 
-                      className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-4"
+                      className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3 sm:p-4"
                       whileHover={{ scale: 1.03 }}
                     >
-                      <div className="text-orange-400 mb-2 text-sm font-medium">Active Projects</div>
-                      <div className="text-2xl font-bold text-white">72</div>
+                      <div className="text-orange-400 mb-2 text-xs sm:text-sm font-medium">Active Projects</div>
+                      <div className="text-xl sm:text-2xl font-bold text-white">72</div>
                       <div className="text-orange-400/70 text-xs mt-1">↑ 12 new this month</div>
                     </motion.div>
                   </div>
                   
-                  <div className="bg-slate-800/50 rounded-lg border border-slate-700 p-4 mb-6">
+                  <div className="bg-slate-800/50 rounded-lg border border-slate-700 p-3 sm:p-4 mb-6">
                     <div className="flex items-center justify-between mb-4">
-                      <h4 className="text-white font-medium">Maintenance AI Assistant</h4>
-                      <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">Active</Badge>
+                      <h4 className="text-white font-medium text-sm sm:text-base">Maintenance AI Assistant</h4>
+                      <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-xs">Active</Badge>
                     </div>
                     
                     <div className="space-y-3 max-h-64 overflow-y-auto mb-4">
@@ -483,7 +484,7 @@ function App() {
                               <MessageSquare className="w-4 h-4 text-sky-400" />
                             )}
                           </div>
-                          <div className={`rounded-lg p-3 text-slate-300 text-sm max-w-xs ${
+                          <div className={`rounded-lg p-2 sm:p-3 text-slate-300 text-xs sm:text-sm max-w-xs ${
                             msg.type === 'user' 
                               ? 'bg-slate-700/50' 
                               : 'bg-sky-500/10'
@@ -497,22 +498,22 @@ function App() {
                       ))}
                     </div>
                     
-                    <div className="flex items-center">
+                    <div className="flex items-center gap-2">
                       <input 
                         type="text" 
-                        placeholder="Ask about maintenance status..." 
+                        placeholder="Ask about maintenance..." 
                         value={currentInput}
                         onChange={(e) => setCurrentInput(e.target.value)}
                         onKeyPress={handleKeyPress}
                         disabled={isTyping}
-                        className="bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-400 flex-1 text-sm focus:outline-none focus:ring-1 focus:ring-sky-500 disabled:opacity-50"
+                        className="bg-slate-700/50 border border-slate-600 rounded-lg px-3 sm:px-4 py-2 text-white placeholder-slate-400 flex-1 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-sky-500 disabled:opacity-50"
                       />
                       <Button 
                         onClick={handleSendMessage}
                         disabled={isTyping || !currentInput.trim()}
-                        className="ml-2 bg-sky-500 hover:bg-sky-600 h-9 w-9 p-0 disabled:opacity-50"
+                        className="bg-sky-500 hover:bg-sky-600 h-8 w-8 sm:h-9 sm:w-9 p-0 disabled:opacity-50 flex-shrink-0"
                       >
-                        <ArrowRight className="w-4 h-4" />
+                        <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
                       </Button>
                     </div>
                   </div>
