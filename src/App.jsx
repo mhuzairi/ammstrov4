@@ -31,6 +31,20 @@ import './App.css'
 function App() {
   const [activeSection, setActiveSection] = useState('hero')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState(0)
+  
+  // Array of rotating announcements
+  const announcements = [
+    "✈️ Latest project bulletin: AI-powered predictive maintenance system deployed",
+    "🚁 New helicopter maintenance module launched with 95% accuracy rate",
+    "🛩️ Partnership with major airline for fleet-wide implementation announced",
+    "📊 Cost reduction of 35% achieved across all client operations this quarter",
+    "🔧 Advanced rotor blade inspection technology now available",
+    "🌟 AMMSTRO wins Aviation Innovation Award 2024",
+    "📈 Real-time analytics dashboard upgraded with new features",
+    "🛡️ Enhanced security protocols implemented for military aircraft maintenance"
+  ]
+  
   const [chatMessages, setChatMessages] = useState([
     {
       type: 'user',
@@ -151,6 +165,17 @@ function App() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // Rotate announcements every 3 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentAnnouncementIndex((prevIndex) => 
+        (prevIndex + 1) % announcements.length
+      )
+    }, 3000)
+
+    return () => clearInterval(interval)
+  }, [announcements.length])
+
   return (
     <div className="bg-white text-slate-900 min-h-screen">
       {/* Navigation */}
@@ -265,9 +290,17 @@ function App() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
               >
-                <Badge className="bg-sky-100 text-sky-700 border-sky-300 px-4 py-2 cursor-pointer shadow-sm">
-                  ✈️ Latest funding round announcement
-                </Badge>
+                <motion.div
+                  key={currentAnnouncementIndex}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Badge className="bg-sky-100 text-sky-700 border-sky-300 px-4 py-2 cursor-pointer shadow-sm">
+                    {announcements[currentAnnouncementIndex]}
+                  </Badge>
+                </motion.div>
               </motion.div>
 
               {/* Main Heading */}
@@ -617,6 +650,108 @@ function App() {
               </motion.div>
             </motion.div>
           </div>
+
+          {/* Commercial Aircraft & Private Jet Solutions */}
+          <motion.div
+            className="mt-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <h3 className="text-2xl font-bold text-center mb-8 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+              Commercial Aircraft & Private Jet Maintenance Solutions
+            </h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <motion.div
+                className="bg-white rounded-xl overflow-hidden shadow-xl border border-slate-200 hover:border-blue-500/30 transition-all duration-300"
+                whileHover={{ 
+                  scale: 1.03,
+                  boxShadow: "0 20px 40px rgba(59, 130, 246, 0.2)"
+                }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <div className="relative h-64">
+                  <img 
+                    src="/assets/commercial-aircraft-1.jpg" 
+                    alt="Commercial Aircraft Maintenance" 
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent"></div>
+                  <div className="absolute bottom-0 left-0 p-4">
+                    <Badge className="bg-blue-500/30 text-blue-300 border-blue-500/40 mb-2">Commercial Aviation</Badge>
+                    <h4 className="text-xl font-bold text-white">Large Commercial Aircraft</h4>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <ul className="space-y-3">
+                    <li className="flex items-start">
+                      <div className="mt-1 mr-3 w-5 h-5 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <CheckCircle className="w-4 h-4 text-blue-500" />
+                      </div>
+                      <p className="text-slate-700">Comprehensive maintenance tracking for Boeing and Airbus fleets</p>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="mt-1 mr-3 w-5 h-5 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <CheckCircle className="w-4 h-4 text-blue-500" />
+                      </div>
+                      <p className="text-slate-700">Automated compliance monitoring for aviation regulations</p>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="mt-1 mr-3 w-5 h-5 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <CheckCircle className="w-4 h-4 text-blue-500" />
+                      </div>
+                      <p className="text-slate-700">Real-time engine performance monitoring and analytics</p>
+                    </li>
+                  </ul>
+                </div>
+              </motion.div>
+              
+              <motion.div
+                className="bg-white rounded-xl overflow-hidden shadow-xl border border-slate-200 hover:border-purple-500/30 transition-all duration-300"
+                whileHover={{ 
+                  scale: 1.03,
+                  boxShadow: "0 20px 40px rgba(147, 51, 234, 0.2)"
+                }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <div className="relative h-64">
+                  <img 
+                    src="/assets/commercial-aircraft-2.jpg" 
+                    alt="Private Jet Maintenance" 
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent"></div>
+                  <div className="absolute bottom-0 left-0 p-4">
+                    <Badge className="bg-purple-500/30 text-purple-300 border-purple-500/40 mb-2">Private Aviation</Badge>
+                    <h4 className="text-xl font-bold text-white">Private Jet & Business Aircraft</h4>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <ul className="space-y-3">
+                    <li className="flex items-start">
+                      <div className="mt-1 mr-3 w-5 h-5 bg-purple-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <CheckCircle className="w-4 h-4 text-purple-500" />
+                      </div>
+                      <p className="text-slate-700">Personalized maintenance schedules for luxury aircraft</p>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="mt-1 mr-3 w-5 h-5 bg-purple-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <CheckCircle className="w-4 h-4 text-purple-500" />
+                      </div>
+                      <p className="text-slate-700">Premium support with 24/7 concierge maintenance services</p>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="mt-1 mr-3 w-5 h-5 bg-purple-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <CheckCircle className="w-4 h-4 text-purple-500" />
+                      </div>
+                      <p className="text-slate-700">Advanced cabin systems and avionics maintenance tracking</p>
+                    </li>
+                  </ul>
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
 
           {/* Specialized Helicopter Maintenance Solutions */}
           <motion.div
@@ -1081,7 +1216,7 @@ function App() {
             <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
               {[
                 { name: "Sam", role: "CEO", initial: "S", color: "bg-blue-500" },
-                { name: "Fahmi", role: "Vice CEO", initial: "F", color: "bg-green-500" },
+                { name: "Fahmi", role: "CDO", initial: "F", color: "bg-green-500" },
                 { name: "Huzairi", role: "COO", initial: "H", color: "bg-purple-500" },
                 { name: "Harrith", role: "CTO", initial: "H", color: "bg-orange-500" },
                 { name: "Arman", role: "CIO", initial: "A", color: "bg-red-500" }
@@ -1332,7 +1467,7 @@ function App() {
                 </div>
               </div>
               <div className="text-slate-400 text-sm">
-                © 2025 AMMSTRO. All rights reserved.
+                © 2025 AMMSTRO SDN BHD All rights reserved.
               </div>
             </div>
           </div>

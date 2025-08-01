@@ -346,7 +346,7 @@ The website is fully responsive and tested on:
 ### **Company Information**
 - **Vision:** "Drive aviation excellence through intelligent automation"
 - **Mission:** "Revamp aircraft maintenance with a unified, predictive platform"
-- **Leadership Team:** Sam (CEO), Fahmi (Vice CEO), Huzairi (COO), Harrith (CTO), Arman (CIO)
+- **Leadership Team:** Sam (CEO), Fahmi (CDO), Huzairi (COO), Harrith (CTO), Arman (CIO)
 - **Business Metrics:** Revenue, margins, growth projections
 
 ### **Interactive Dashboard**
