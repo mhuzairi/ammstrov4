@@ -1552,7 +1552,7 @@ function App() {
             
             {/* Header */}
             <div className="bg-gradient-to-r from-sky-600 to-blue-700 text-white p-2">
-              <p className="text-sky-100 text-sm">Begin your aviation maintenance transformation journey</p>
+              <p className="text-sky-100 text-sm">Begin your aviation maintenance transformation</p>
             </div>
             
             {/* Website Container */}
