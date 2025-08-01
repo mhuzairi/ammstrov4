@@ -306,8 +306,10 @@ function App() {
                   transition={{ duration: 0.5 }}
                   className="flex justify-center px-4"
                 >
-                  <Badge className="bg-sky-100 text-sky-700 border-sky-300 px-3 py-2 cursor-pointer shadow-sm text-xs sm:text-sm text-center max-w-full break-words">
-                    {announcements[currentAnnouncementIndex]}
+                  <Badge className="bg-sky-100 text-sky-700 border-sky-300 px-3 py-2 cursor-pointer shadow-sm text-xs sm:text-sm text-center max-w-full break-words leading-relaxed sm:leading-normal min-h-[3rem] sm:min-h-[auto] flex items-center justify-center">
+                    <span className="whitespace-normal max-w-[280px] sm:max-w-none">
+                      {announcements[currentAnnouncementIndex]}
+                    </span>
                   </Badge>
                 </motion.div>
               </motion.div>
