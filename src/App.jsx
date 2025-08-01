@@ -618,6 +618,108 @@ function App() {
             </motion.div>
           </div>
 
+          {/* Specialized Helicopter Maintenance Solutions */}
+          <motion.div
+            className="mt-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <h3 className="text-2xl font-bold text-center mb-8 bg-gradient-to-r from-green-400 to-orange-500 bg-clip-text text-transparent">
+              Specialized Helicopter Maintenance Solutions
+            </h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <motion.div
+                className="bg-white rounded-xl overflow-hidden shadow-xl border border-slate-200 hover:border-green-500/30 transition-all duration-300"
+                whileHover={{ 
+                  scale: 1.03,
+                  boxShadow: "0 20px 40px rgba(34, 197, 94, 0.2)"
+                }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <div className="relative h-64">
+                  <img 
+                    src="/assets/helicopter-1.jpg" 
+                    alt="Helicopter Maintenance" 
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent"></div>
+                  <div className="absolute bottom-0 left-0 p-4">
+                    <Badge className="bg-green-500/30 text-green-300 border-green-500/40 mb-2">Rotorcraft</Badge>
+                    <h4 className="text-xl font-bold text-white">Comprehensive Helicopter Maintenance</h4>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <ul className="space-y-3">
+                    <li className="flex items-start">
+                      <div className="mt-1 mr-3 w-5 h-5 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                      </div>
+                      <p className="text-slate-700">Specialized rotor system maintenance and inspection protocols</p>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="mt-1 mr-3 w-5 h-5 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                      </div>
+                      <p className="text-slate-700">Vibration analysis and dynamic component tracking</p>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="mt-1 mr-3 w-5 h-5 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                      </div>
+                      <p className="text-slate-700">Customized maintenance schedules for various helicopter models</p>
+                    </li>
+                  </ul>
+                </div>
+              </motion.div>
+              
+              <motion.div
+                className="bg-white rounded-xl overflow-hidden shadow-xl border border-slate-200 hover:border-green-500/30 transition-all duration-300"
+                whileHover={{ 
+                  scale: 1.03,
+                  boxShadow: "0 20px 40px rgba(34, 197, 94, 0.2)"
+                }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <div className="relative h-64">
+                  <img 
+                    src="/assets/helicopter-2.jpg" 
+                    alt="Helicopter Systems" 
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent"></div>
+                  <div className="absolute bottom-0 left-0 p-4">
+                    <Badge className="bg-green-500/30 text-green-300 border-green-500/40 mb-2">Advanced Systems</Badge>
+                    <h4 className="text-xl font-bold text-white">Helicopter Avionics & Systems</h4>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <ul className="space-y-3">
+                    <li className="flex items-start">
+                      <div className="mt-1 mr-3 w-5 h-5 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                      </div>
+                      <p className="text-slate-700">Integrated avionics diagnostics and troubleshooting</p>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="mt-1 mr-3 w-5 h-5 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                      </div>
+                      <p className="text-slate-700">Specialized tools for helicopter-specific maintenance tasks</p>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="mt-1 mr-3 w-5 h-5 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                      </div>
+                      <p className="text-slate-700">AI-powered predictive maintenance for critical components</p>
+                    </li>
+                  </ul>
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+
           {/* Military Aviation Showcase */}
           <motion.div
             className="mt-16 mb-8"
@@ -696,83 +798,7 @@ function App() {
             </div>
           </motion.div>
 
-          {/* Helicopter Maintenance Solutions */}
-          <motion.div
-            className="mt-16"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <h3 className="text-2xl font-bold text-center mb-6 bg-gradient-to-r from-emerald-600 to-sky-600 bg-clip-text text-transparent">
-              Helicopter Maintenance Solutions
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <motion.div
-                className="relative overflow-hidden rounded-xl shadow-lg"
-                whileHover={{ 
-                  scale: 1.05,
-                  rotateY: 5,
-                  z: 10,
-                  boxShadow: "0 20px 40px rgba(16, 185, 129, 0.3)"
-                }}
-                transition={{ type: "spring", stiffness: 300 }}
-                style={{ transformStyle: "preserve-3d" }}
-              >
-                <img 
-                  src="/assets/helicopter-hangar.jpg" 
-                  alt="Helicopter Maintenance Hangar" 
-                  className="w-full h-80 object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/50 to-transparent flex flex-col justify-end">
-                  <div className="p-6">
-                    <Badge className="mb-3 bg-emerald-500/30 text-emerald-300 border-emerald-500/40">Rotorcraft</Badge>
-                    <h4 className="text-2xl font-bold text-white mb-2">Helicopter Maintenance Facility</h4>
-                    <p className="text-slate-200 mb-4">State-of-the-art helicopter maintenance facilities with specialized equipment for rotorcraft maintenance and inspection.</p>
-                    <motion.div
-                      whileHover={{ scale: 1.05, x: 5 }}
-                      className="flex items-center text-emerald-300 text-sm font-medium"
-                    >
-                      <span>Explore Helicopter Solutions</span>
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </motion.div>
-                  </div>
-                </div>
-              </motion.div>
-              
-              <motion.div
-                className="relative overflow-hidden rounded-xl shadow-lg"
-                whileHover={{ 
-                  scale: 1.05,
-                  rotateY: -5,
-                  z: 10,
-                  boxShadow: "0 20px 40px rgba(16, 185, 129, 0.3)"
-                }}
-                transition={{ type: "spring", stiffness: 300 }}
-                style={{ transformStyle: "preserve-3d" }}
-              >
-                <img 
-                  src="/assets/helicopter-maintenance.jpg" 
-                  alt="Helicopter Maintenance Operations" 
-                  className="w-full h-80 object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/50 to-transparent flex flex-col justify-end">
-                  <div className="p-6">
-                    <Badge className="mb-3 bg-emerald-500/30 text-emerald-300 border-emerald-500/40">Advanced Systems</Badge>
-                    <h4 className="text-2xl font-bold text-white mb-2">Helicopter Systems Maintenance</h4>
-                    <p className="text-slate-200 mb-4">Comprehensive maintenance solutions for helicopter avionics, engines, and rotor systems with precision diagnostics.</p>
-                    <motion.div
-                      whileHover={{ scale: 1.05, x: 5 }}
-                      className="flex items-center text-emerald-300 text-sm font-medium"
-                    >
-                      <span>Discover Rotorcraft Services</span>
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </motion.div>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          </motion.div>
+          {/* First helicopter section removed - keeping specialized section */}
         </div>
       </section>
 
@@ -1011,107 +1037,7 @@ function App() {
             ))}
           </div>
           
-          {/* Helicopter Maintenance Showcase */}
-          <motion.div
-            className="mt-16"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <h3 className="text-2xl font-bold text-center mb-8 bg-gradient-to-r from-green-400 to-orange-500 bg-clip-text text-transparent">
-              Specialized Helicopter Maintenance Solutions
-            </h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <motion.div
-                className="bg-white rounded-xl overflow-hidden shadow-xl border border-slate-200 hover:border-green-500/30 transition-all duration-300"
-                whileHover={{ 
-                  scale: 1.03,
-                  boxShadow: "0 20px 40px rgba(34, 197, 94, 0.2)"
-                }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <div className="relative h-64">
-                  <img 
-                    src="/assets/helicopter-1.jpg" 
-                    alt="Helicopter Maintenance" 
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent"></div>
-                  <div className="absolute bottom-0 left-0 p-4">
-                    <Badge className="bg-green-500/30 text-green-300 border-green-500/40 mb-2">Rotorcraft</Badge>
-                    <h4 className="text-xl font-bold text-white">Comprehensive Helicopter Maintenance</h4>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <ul className="space-y-3">
-                    <li className="flex items-start">
-                      <div className="mt-1 mr-3 w-5 h-5 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                      </div>
-                      <p className="text-slate-700">Specialized rotor system maintenance and inspection protocols</p>
-                    </li>
-                    <li className="flex items-start">
-                      <div className="mt-1 mr-3 w-5 h-5 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                      </div>
-                      <p className="text-slate-700">Vibration analysis and dynamic component tracking</p>
-                    </li>
-                    <li className="flex items-start">
-                      <div className="mt-1 mr-3 w-5 h-5 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                      </div>
-                      <p className="text-slate-700">Customized maintenance schedules for various helicopter models</p>
-                    </li>
-                  </ul>
-                </div>
-              </motion.div>
-              
-              <motion.div
-                className="bg-white rounded-xl overflow-hidden shadow-xl border border-slate-200 hover:border-green-500/30 transition-all duration-300"
-                whileHover={{ 
-                  scale: 1.03,
-                  boxShadow: "0 20px 40px rgba(34, 197, 94, 0.2)"
-                }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <div className="relative h-64">
-                  <img 
-                    src="/assets/helicopter-2.jpg" 
-                    alt="Helicopter Systems" 
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent"></div>
-                  <div className="absolute bottom-0 left-0 p-4">
-                    <Badge className="bg-green-500/30 text-green-300 border-green-500/40 mb-2">Advanced Systems</Badge>
-                    <h4 className="text-xl font-bold text-white">Helicopter Avionics & Systems</h4>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <ul className="space-y-3">
-                    <li className="flex items-start">
-                      <div className="mt-1 mr-3 w-5 h-5 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                      </div>
-                      <p className="text-slate-700">Integrated avionics diagnostics and troubleshooting</p>
-                    </li>
-                    <li className="flex items-start">
-                      <div className="mt-1 mr-3 w-5 h-5 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                      </div>
-                      <p className="text-slate-700">Specialized tools for helicopter-specific maintenance tasks</p>
-                    </li>
-                    <li className="flex items-start">
-                      <div className="mt-1 mr-3 w-5 h-5 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                      </div>
-                      <p className="text-slate-700">AI-powered predictive maintenance for critical components</p>
-                    </li>
-                  </ul>
-                </div>
-              </motion.div>
-            </div>
-          </motion.div>
+          {/* Helicopter section moved above military section */}
         </div>
       </section>
 
