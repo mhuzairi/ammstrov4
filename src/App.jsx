@@ -62,7 +62,7 @@ function App() {
   // Predefined AI responses for aviation maintenance queries
   const aiResponses = {
     'maintenance schedule': "Current maintenance schedule shows 15 aircraft due for inspection this week. Priority items include 3 A-checks and 2 B-checks. All scheduled within operational windows.",
-    'fleet status': "Fleet status: 86.23% availability. 12 aircraft operational, 2 in scheduled maintenance, 1 in unscheduled repair. Average turnaround time: 4.2 hours.",
+    'fleet status': "Fleet status: 86% availability. 12 aircraft operational, 2 in scheduled maintenance, 1 in unscheduled repair. Average turnaround time: 4.2 hours.",
     'cost analysis': "Maintenance costs reduced by 35% this quarter through predictive analytics. Saved $2.3M in unscheduled repairs and optimized parts inventory by 28%.",
     'boeing 737': "Boeing 737-800 (N12345): C-check 82% complete. Engine inspection passed, avionics updated, landing gear serviced. ETA completion: 14:30 today.",
     'airbus a320': "Airbus A320 (N67890): Recently completed 100-hour inspection. All systems operational. Next scheduled maintenance in 450 flight hours.",
@@ -328,7 +328,11 @@ function App() {
                 <Button className="bg-gradient-to-r from-sky-600 to-sky-700 hover:from-sky-700 hover:to-sky-800 text-white px-8 py-6 text-lg">
                   Get Started
                 </Button>
-                <Button variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-100 px-8 py-6 text-lg">
+                <Button 
+                  variant="outline" 
+                  className="border-slate-300 text-slate-700 hover:bg-slate-100 px-8 py-6 text-lg"
+                  onClick={() => window.open('https://youtu.be/U8CswzvK9Zc?si=gKkkG2ior_5PNSdC', '_blank')}
+                >
                   <Play className="w-5 h-5 mr-2" /> Watch Demo
                 </Button>
               </motion.div>
@@ -427,7 +431,7 @@ function App() {
                       whileHover={{ scale: 1.03 }}
                     >
                       <div className="text-sky-400 mb-2 text-sm font-medium">Fleet Availability</div>
-                      <div className="text-2xl font-bold text-white">86.23%</div>
+                      <div className="text-2xl font-bold text-white">86%</div>
                       <div className="text-sky-400/70 text-xs mt-1">↑ 2.1% from last month</div>
                     </motion.div>
                     
