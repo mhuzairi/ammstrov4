@@ -23,7 +23,7 @@ import {
   Award,
   Globe,
   Menu,
-  X
+  X,
 } from 'lucide-react'
 import ammstroLogo from '/assets/ammstro-logo.png'
 import './App.css'
@@ -1301,6 +1301,7 @@ function App() {
         </div>
       </section>
 
+
       {/* FAQ Section */}
       <section id="faq" className="py-20">
         <div className="max-w-7xl mx-auto px-6">
@@ -1467,7 +1468,7 @@ function App() {
               <h3 className="text-white font-bold mb-4">Resources</h3>
               <ul className="space-y-2">
                 <li><a href="#" className="text-slate-400 hover:text-white">Blog</a></li>
-                <li><a href="#" className="text-slate-400 hover:text-white">Documentation</a></li>
+                <li><a href="/documentation" className="text-slate-400 hover:text-white">Documentation</a></li>
                 <li><a href="#" className="text-slate-400 hover:text-white">Community</a></li>
                 <li><a href="#" className="text-slate-400 hover:text-white">Webinars</a></li>
                 <li><a href="#" className="text-slate-400 hover:text-white">Support</a></li>
