@@ -7,7 +7,8 @@ import {
   updateDoc, 
   deleteDoc, 
   getDocs, 
-  onSnapshot 
+  onSnapshot,
+  deleteField 
 } from 'firebase/firestore';
 import { db } from './firebase.js';
 
@@ -93,6 +94,28 @@ export const adminSettingsService = {
       await updateDoc(settingsRef, { [field]: value });
     } catch (error) {
       console.error('Error updating admin setting:', error);
+      throw error;
+    }
+  },
+
+  // Delete module (similar to discount code deletion pattern)
+  async deleteModule(moduleKey) {
+    try {
+      console.log('🔥 Firebase deleteModule called with:', moduleKey);
+      const settingsRef = doc(db, 'admin-settings', 'config');
+      
+      // Use updateDoc with deleteField() to properly remove nested properties
+      const updates = {
+        [`moduleLabels.${moduleKey}`]: deleteField(),
+        [`modulePrices.${moduleKey}`]: deleteField(),
+        [`moduleVisibility.${moduleKey}`]: deleteField()
+      };
+      
+      console.log('📝 Delete updates prepared with deleteField():', Object.keys(updates));
+      await updateDoc(settingsRef, updates);
+      console.log('✅ Firebase module deletion completed successfully!');
+    } catch (error) {
+      console.error('❌ Error deleting module:', error);
       throw error;
     }
   },

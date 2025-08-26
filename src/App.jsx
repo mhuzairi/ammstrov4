@@ -162,6 +162,12 @@ function PricingCalculator() {
   // Loading states
   const [isLoadingSettings, setIsLoadingSettings] = useState(true)
   const [isLoadingDiscountCodes, setIsLoadingDiscountCodes] = useState(true)
+  const [isSavingSettings, setIsSavingSettings] = useState(false)
+  const [isAddingModule, setIsAddingModule] = useState(false)
+  const [isDeletingModule, setIsDeletingModule] = useState(false)
+  const [isAddingDiscount, setIsAddingDiscount] = useState(false)
+  const [isUpdatingDiscount, setIsUpdatingDiscount] = useState(false)
+  const [isDeletingDiscount, setIsDeletingDiscount] = useState(false)
   const [settingsError, setSettingsError] = useState(null)
   const [discountCodesError, setDiscountCodesError] = useState(null)
 
@@ -185,18 +191,22 @@ function PricingCalculator() {
         if (settings.moduleLabels) {
           setDynamicModuleLabels(settings.moduleLabels)
           
-          // Update moduleOrder to include all modules from Firebase
-          // Keep existing order for known modules, add new ones at the end
           const existingModules = Object.keys(settings.moduleLabels)
-          setModuleOrder(prevOrder => {
-            const newOrder = [...prevOrder]
-            existingModules.forEach(module => {
-              if (!newOrder.includes(module)) {
-                newOrder.push(module)
-              }
-            })
-            return newOrder
-          })
+          
+          // Update moduleOrder - ensure ALL modules from moduleLabels are included
+          if (settings.moduleOrder) {
+            // Use the saved order from Firebase, but ensure all existing modules are included
+            const savedOrder = settings.moduleOrder.filter(module => existingModules.includes(module))
+            // Add any modules that exist in moduleLabels but are missing from saved order
+            const missingModules = existingModules.filter(module => !settings.moduleOrder.includes(module))
+            const finalOrder = [...savedOrder, ...missingModules]
+
+            setModuleOrder(finalOrder)
+          } else {
+            // Fallback: use all modules from moduleLabels
+
+            setModuleOrder(existingModules)
+          }
           
           // Update selectedModules to include new modules (unselected by default)
           setSelectedModules(prevSelected => {
@@ -353,6 +363,9 @@ function PricingCalculator() {
     }
     
     try {
+      setIsAddingDiscount(true)
+      setDiscountCodesError(null)
+      
       // Save to Firestore
       await discountCodesService.addDiscountCode(newDiscount)
       
@@ -369,18 +382,22 @@ function PricingCalculator() {
       alert('Discount code created successfully!')
     } catch (error) {
       console.error('Error adding discount code:', error)
+      setDiscountCodesError('Failed to create discount code. Please try again.')
       alert('Failed to create discount code. Please try again.')
+    } finally {
+      setIsAddingDiscount(false)
     }
   }
   
   const handleToggleDiscountStatus = async (code) => {
     try {
-      console.log('🔄 Toggling discount status for code:', code)
+      setIsUpdatingDiscount(true)
+      setDiscountCodesError(null)
+      
       const discountToUpdate = discountCodes.find(d => d.code === code)
-      console.log('📋 Found discount to update:', discountToUpdate)
       
       if (!discountToUpdate) {
-        console.error('❌ Discount code not found:', code)
+        console.error('Discount code not found:', code)
         return
       }
       
@@ -389,12 +406,9 @@ function PricingCalculator() {
         active: !discountToUpdate.active,
         updatedAt: new Date()
       }
-      console.log('📝 Update data:', updateData)
       
       // Update in Firestore
-      console.log('🔥 Calling Firebase updateDiscountCode...')
       await discountCodesService.updateDiscountCode(code, updateData)
-      console.log('✅ Firebase update completed successfully!')
       
       // Update local state
       setDiscountCodes(prev => prev.map(discount => 
@@ -402,16 +416,21 @@ function PricingCalculator() {
           ? { ...discount, active: !discount.active }
           : discount
       ))
-      console.log('🔄 Local state updated successfully!')
     } catch (error) {
-      console.error('❌ Error toggling discount status:', error)
+      console.error('Error toggling discount status:', error)
+      setDiscountCodesError('Failed to update discount code status. Please try again.')
       alert('Failed to update discount code status. Please try again.')
+    } finally {
+      setIsUpdatingDiscount(false)
     }
   }
   
   const handleDeleteDiscountCode = async (code) => {
     if (confirm(`Are you sure you want to delete the discount code "${code}"?`)) {
       try {
+        setIsDeletingDiscount(true)
+        setDiscountCodesError(null)
+        
         // Delete from Firestore
         await discountCodesService.deleteDiscountCode(code)
         
@@ -424,7 +443,10 @@ function PricingCalculator() {
         }
       } catch (error) {
         console.error('Error deleting discount code:', error)
+        setDiscountCodesError('Failed to delete discount code. Please try again.')
         alert('Failed to delete discount code. Please try again.')
+      } finally {
+        setIsDeletingDiscount(false)
       }
     }
   }
@@ -558,11 +580,15 @@ function PricingCalculator() {
 
   const handleSaveChanges = async () => {
     try {
+      setIsSavingSettings(true)
+      setSettingsError(null)
+      
       // Prepare settings object
       const settings = {
         modulePrices: adminModulePrices,
         moduleVisibility: moduleVisibility,
-        moduleLabels: dynamicModuleLabels
+        moduleLabels: dynamicModuleLabels,
+        moduleOrder: moduleOrder
       }
       
       // Save to Firestore
@@ -579,7 +605,10 @@ function PricingCalculator() {
       alert('Pricing changes saved successfully!')
     } catch (error) {
       console.error('Error saving admin settings:', error)
+      setSettingsError('Failed to save changes. Please try again.')
       alert('Failed to save changes. Please try again.')
+    } finally {
+      setIsSavingSettings(false)
     }
   }
 
@@ -604,14 +633,18 @@ function PricingCalculator() {
       return
     }
 
-    console.log('🔄 Starting new module save process...')
-    console.log('Module name:', newModuleName)
-    console.log('Module price:', newModulePrice)
-
     try {
+      setIsAddingModule(true)
+      setSettingsError(null)
+      
       // Create a unique key for the new module
       const moduleKey = newModuleName.toLowerCase().replace(/[^a-z0-9]/g, '')
-      console.log('Generated module key:', moduleKey)
+      
+      // Check if module key already exists
+      if (dynamicModuleLabels[moduleKey]) {
+        alert('A module with this name already exists. Please choose a different name.')
+        return
+      }
       
       // Prepare updated data
       const updatedModuleLabels = {
@@ -629,16 +662,18 @@ function PricingCalculator() {
         [moduleKey]: true
       }
       
+      // Add to module order (at the end)
+      const updatedModuleOrder = [...moduleOrder, moduleKey]
+      
       // Save to Firebase
       const settings = {
         modulePrices: updatedModulePrices,
         moduleVisibility: updatedModuleVisibility,
-        moduleLabels: updatedModuleLabels
+        moduleLabels: updatedModuleLabels,
+        moduleOrder: updatedModuleOrder
       }
       
-      console.log('📤 Saving settings to Firebase:', settings)
       await adminSettingsService.saveSettings(settings)
-      console.log('✅ Firebase save completed successfully!')
       
       // Update local state after successful save
       setDynamicModuleLabels(updatedModuleLabels)
@@ -646,15 +681,13 @@ function PricingCalculator() {
       setAdminModulePrices(updatedModulePrices)
       setCurrentModulePrices(updatedModulePrices)
       setModuleVisibility(updatedModuleVisibility)
+      setModuleOrder(updatedModuleOrder)
       
       // Add to selected modules (unselected by default)
       setSelectedModules(prev => ({
         ...prev,
         [moduleKey]: false
       }))
-      
-      // Add to module order (at the end)
-      setModuleOrder(prev => [...prev, moduleKey])
       
       // Reset form and close modal
       setNewModuleName('')
@@ -664,7 +697,10 @@ function PricingCalculator() {
       alert('New module added successfully!')
     } catch (error) {
       console.error('Error adding new module:', error)
+      setSettingsError('Failed to add new module. Please try again.')
       alert('Failed to add new module. Please try again.')
+    } finally {
+      setIsAddingModule(false)
     }
   }
 
@@ -697,29 +733,64 @@ function PricingCalculator() {
   }
 
   // Module reordering functions
-  const handleMoveModuleUp = (moduleKey) => {
+  const handleMoveModuleUp = async (moduleKey) => {
     const currentIndex = moduleOrder.indexOf(moduleKey)
     if (currentIndex > 0) {
       const newOrder = [...moduleOrder]
       const temp = newOrder[currentIndex]
       newOrder[currentIndex] = newOrder[currentIndex - 1]
       newOrder[currentIndex - 1] = temp
-      setModuleOrder(newOrder)
+      
+      try {
+        // Save updated order to Firebase
+        const settings = {
+          modulePrices: adminModulePrices,
+          moduleVisibility: moduleVisibility,
+          moduleLabels: dynamicModuleLabels,
+          moduleOrder: newOrder
+        }
+        
+        await adminSettingsService.saveSettings(settings)
+        setModuleOrder(newOrder)
+      } catch (error) {
+        console.error('Error saving module order:', error)
+        alert('Failed to save module order. Please try again.')
+      }
     }
   }
 
-  const handleMoveModuleDown = (moduleKey) => {
+  const handleMoveModuleDown = async (moduleKey) => {
     const currentIndex = moduleOrder.indexOf(moduleKey)
     if (currentIndex < moduleOrder.length - 1) {
       const newOrder = [...moduleOrder]
       const temp = newOrder[currentIndex]
       newOrder[currentIndex] = newOrder[currentIndex + 1]
       newOrder[currentIndex + 1] = temp
-      setModuleOrder(newOrder)
+      
+      try {
+        // Save updated order to Firebase
+        const settings = {
+          modulePrices: adminModulePrices,
+          moduleVisibility: moduleVisibility,
+          moduleLabels: dynamicModuleLabels,
+          moduleOrder: newOrder
+        }
+        
+        await adminSettingsService.saveSettings(settings)
+        setModuleOrder(newOrder)
+      } catch (error) {
+        console.error('Error saving module order:', error)
+        alert('Failed to save module order. Please try again.')
+      }
     }
   }
 
   const handleDeleteModule = async (moduleKey) => {
+    console.log('🚨🚨🚨 CRITICAL: handleDeleteModule FUNCTION CALLED! 🚨🚨🚨')
+    console.log('🗑️ handleDeleteModule called with moduleKey:', moduleKey)
+    console.log('🔍 Current dynamicModuleLabels:', dynamicModuleLabels)
+    console.log('🔍 Current moduleOrder:', moduleOrder)
+    
     // Prevent deletion of basic maintenance module
     if (moduleKey === 'basicMaintenance') {
       alert('Cannot delete the Basic Maintenance module as it is required.')
@@ -728,11 +799,16 @@ function PricingCalculator() {
 
     // Confirm deletion
     if (!confirm(`Are you sure you want to delete the "${dynamicModuleLabels[moduleKey]}" module? This action cannot be undone.`)) {
+      console.log('❌ User cancelled deletion')
       return
     }
 
     try {
-      // Prepare updated data with module removed
+      console.log('🔄 Starting module deletion process...')
+      setIsDeletingModule(true)
+      setSettingsError(null)
+      
+      // Prepare updated data with module removed (same as discount code pattern)
       const updatedModuleLabels = { ...dynamicModuleLabels }
       delete updatedModuleLabels[moduleKey]
       
@@ -742,35 +818,48 @@ function PricingCalculator() {
       const updatedModuleVisibility = { ...moduleVisibility }
       delete updatedModuleVisibility[moduleKey]
       
-      // Save to Firebase
-      const settings = {
-        modulePrices: updatedModulePrices,
-        moduleVisibility: updatedModuleVisibility,
-        moduleLabels: updatedModuleLabels
-      }
+      // Remove from module order
+      const updatedModuleOrder = moduleOrder.filter(module => module !== moduleKey)
       
-      await adminSettingsService.saveSettings(settings)
+      console.log('📝 Prepared updated data:', {
+        moduleLabels: Object.keys(updatedModuleLabels),
+        moduleOrder: updatedModuleOrder,
+        modulePrices: Object.keys(updatedModulePrices)
+      })
       
-      // Update local state after successful save
+      // Use direct Firebase delete (same pattern as discount codes)
+      console.log('💾 Calling adminSettingsService.deleteModule...')
+      await adminSettingsService.deleteModule(moduleKey)
+      
+      // Update moduleOrder separately
+      console.log('💾 Updating moduleOrder...')
+      await adminSettingsService.updateSetting('moduleOrder', updatedModuleOrder)
+      console.log('✅ Firebase updates completed successfully!')
+      
+      // Update local state immediately (same as discount codes)
+      console.log('🔄 Updating local state...')
       setDynamicModuleLabels(updatedModuleLabels)
       setDynamicModulePrices(updatedModulePrices)
       setAdminModulePrices(updatedModulePrices)
       setCurrentModulePrices(updatedModulePrices)
       setModuleVisibility(updatedModuleVisibility)
+      setModuleOrder(updatedModuleOrder)
       
+      // Remove from selected modules
       setSelectedModules(prev => {
         const updated = { ...prev }
         delete updated[moduleKey]
         return updated
       })
 
-      // Remove from module order
-      setModuleOrder(prev => prev.filter(module => module !== moduleKey))
-
+      console.log('🎉 Module deletion completed successfully!')
       alert('Module deleted successfully!')
     } catch (error) {
-      console.error('Error deleting module:', error)
+      console.error('❌ Error deleting module:', error)
+      setSettingsError('Failed to delete module. Please try again.')
       alert('Failed to delete module. Please try again.')
+    } finally {
+      setIsDeletingModule(false)
     }
   }
 
@@ -1172,7 +1261,11 @@ function PricingCalculator() {
                       <div className="text-xs text-slate-500">Loading admin settings...</div>
                     </div>
                   ) : (
-                  moduleOrder.filter(module => dynamicModuleLabels[module]).map((module, index) => {
+                  moduleOrder.map((module, index) => {
+                    // Skip modules that don't have labels or have empty labels
+                    if (!dynamicModuleLabels[module] || !dynamicModuleLabels[module].trim()) {
+                      return null
+                    }
                     const label = dynamicModuleLabels[module]
                     return (
                       <div key={module} className="bg-white p-3 rounded-lg border border-slate-200">
@@ -1200,11 +1293,11 @@ function PricingCalculator() {
                               </button>
                               <button
                                 onClick={() => handleDeleteModule(module)}
-                                disabled={module === 'basicMaintenance'}
+                                disabled={module === 'basicMaintenance' || isDeletingModule}
                                 className="p-1 text-red-400 hover:text-red-600 disabled:opacity-30 disabled:cursor-not-allowed"
                                 title={module === 'basicMaintenance' ? 'Cannot delete required module' : 'Delete module'}
                               >
-                                <X className="w-3 h-3" />
+                                {isDeletingModule ? <div className="w-3 h-3 border border-red-400 border-t-transparent rounded-full animate-spin"></div> : <X className="w-3 h-3" />}
                               </button>
                             </div>
                             <span className="text-xs text-slate-500">Visible:</span>
@@ -1225,7 +1318,7 @@ function PricingCalculator() {
                         />
                       </div>
                     )
-                  }))
+                  }).filter(Boolean))
                 }
                 </div>
                 </div>
@@ -1351,17 +1444,19 @@ function PricingCalculator() {
                                 </button>
                                 <button
                                   onClick={() => handleToggleDiscountStatus(code.code)}
-                                  className={`px-1 py-0.5 text-xs rounded ${
+                                  disabled={isUpdatingDiscount || isDeletingDiscount}
+                                  className={`px-1 py-0.5 text-xs rounded disabled:opacity-50 disabled:cursor-not-allowed ${
                                     code.active ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-green-100 text-green-700 hover:bg-green-200'
                                   }`}>
-                                  {code.active ? 'Deactivate' : 'Reactivate'}
+                                  {isUpdatingDiscount ? 'Updating...' : (code.active ? 'Deactivate' : 'Reactivate')}
                                 </button>
                                 <button
                                   onClick={() => handleDeleteDiscountCode(code.code)}
-                                  className="p-1 text-red-500 hover:text-red-700"
+                                  disabled={isUpdatingDiscount || isDeletingDiscount}
+                                  className="p-1 text-red-500 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                   title="Delete code"
                                 >
-                                  <X className="w-3 h-3" />
+                                  {isDeletingDiscount ? <div className="w-3 h-3 border border-red-500 border-t-transparent rounded-full animate-spin"></div> : <X className="w-3 h-3" />}
                                 </button>
                               </div>
                             </div>
@@ -1423,10 +1518,10 @@ function PricingCalculator() {
                       <Button
                         onClick={handleAddDiscountCode}
                         size="sm"
-                        className="w-full bg-green-500 hover:bg-green-600 text-xs py-1"
-                        disabled={!newDiscountCode || !newDiscountValue}
+                        className="w-full bg-green-500 hover:bg-green-600 text-xs py-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={!newDiscountCode || !newDiscountValue || isAddingDiscount}
                       >
-                        Add Code
+                        {isAddingDiscount ? 'Adding...' : 'Add Code'}
                       </Button>
                     </div>
                   </div>
@@ -1437,10 +1532,18 @@ function PricingCalculator() {
             <div className="border-t border-slate-200 p-6 bg-gradient-to-r from-slate-50 to-white">
               <div className="flex justify-between items-center">
                 <div className="flex space-x-3">
-                  <Button onClick={handleSaveChanges} className="bg-green-500 hover:bg-green-600 px-6 shadow-sm">
-                    Save Changes
+                  <Button 
+                    onClick={handleSaveChanges} 
+                    disabled={isSavingSettings}
+                    className="bg-green-500 hover:bg-green-600 px-6 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSavingSettings ? 'Saving...' : 'Save Changes'}
                   </Button>
-                  <Button onClick={handleAddNewModule} className="bg-blue-500 hover:bg-blue-600 px-6 shadow-sm">
+                  <Button 
+                    onClick={handleAddNewModule} 
+                    disabled={isSavingSettings || isAddingModule}
+                    className="bg-blue-500 hover:bg-blue-600 px-6 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
                     Add New Module
                   </Button>
                 </div>
@@ -1486,10 +1589,19 @@ function PricingCalculator() {
               </div>
             </div>
             <div className="flex space-x-3 mt-6">
-              <Button onClick={handleSaveNewModule} className="flex-1 bg-green-500 hover:bg-green-600">
-                Add Module
+              <Button 
+                onClick={handleSaveNewModule} 
+                disabled={isAddingModule}
+                className="flex-1 bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isAddingModule ? 'Adding...' : 'Add Module'}
               </Button>
-              <Button onClick={handleCloseAddModuleModal} variant="outline" className="flex-1">
+              <Button 
+                onClick={handleCloseAddModuleModal} 
+                variant="outline" 
+                className="flex-1"
+                disabled={isAddingModule}
+              >
                 Cancel
               </Button>
             </div>
