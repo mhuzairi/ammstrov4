@@ -3,6 +3,8 @@ import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button.jsx'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
+import jsPDF from 'jspdf'
+import { adminSettingsService, discountCodesService } from './lib/firestore'
 import { 
   Plane, 
   BarChart3, 
@@ -24,9 +26,1925 @@ import {
   Globe,
   Menu,
   X,
+  Edit,
+  Plus,
 } from 'lucide-react'
 import ammstroLogo from '/assets/ammstro-logo.png'
 import './App.css'
+
+// Dynamic Pricing Calculator Component
+function PricingCalculator() {
+  const [aircraftCount, setAircraftCount] = useState(1)
+  const [selectedModules, setSelectedModules] = useState({
+    basicMaintenance: true,
+    predictiveAnalytics: false,
+    realTimeMonitoring: false,
+    advancedReporting: false,
+    apiIntegrations: false,
+    prioritySupport: false,
+    training: false,
+    customIntegrations: false,
+    dedicatedManager: false,
+    premiumSupport: false
+  })
+  
+  // Base pricing per aircraft
+  const basePricePerAircraft = 5000
+  
+  // Module pricing
+  const modulePrices = {
+    basicMaintenance: 0, // included in base
+    predictiveAnalytics: 250,
+    realTimeMonitoring: 350,
+    advancedReporting: 200,
+    apiIntegrations: 300,
+    prioritySupport: 150,
+    training: 400,
+    customIntegrations: 750,
+    dedicatedManager: 1000,
+    premiumSupport: 500
+  }
+
+  // Admin state
+  const [showAccessModal, setShowAccessModal] = useState(false)
+  const [showAdminModal, setShowAdminModal] = useState(false)
+  const [accessCode, setAccessCode] = useState('')
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [showAddModuleModal, setShowAddModuleModal] = useState(false)
+  const [showQuoteModal, setShowQuoteModal] = useState(false)
+  const [newModuleName, setNewModuleName] = useState('')
+  const [newModulePrice, setNewModulePrice] = useState('')
+  
+  // Discount code state
+  const [discountCode, setDiscountCode] = useState('')
+  const [appliedDiscount, setAppliedDiscount] = useState(null)
+  const [discountError, setDiscountError] = useState('')
+  const [showDiscountInput, setShowDiscountInput] = useState(false)
+  
+  // Admin discount management
+  const [showDiscountModal, setShowDiscountModal] = useState(false)
+  const [discountCodes, setDiscountCodes] = useState([])
+  const [newDiscountCode, setNewDiscountCode] = useState('')
+  const [newDiscountType, setNewDiscountType] = useState('percentage')
+  const [newDiscountValue, setNewDiscountValue] = useState('')
+  const [newDiscountIsOneTime, setNewDiscountIsOneTime] = useState(false)
+  const [newDiscountValidUntil, setNewDiscountValidUntil] = useState('')
+  const [usedOneTimeCodes, setUsedOneTimeCodes] = useState(new Set())
+  
+  // Editing state for discount codes
+  const [editingDiscountCode, setEditingDiscountCode] = useState(null)
+  const [editFormData, setEditFormData] = useState({})
+  
+  // Admin pricing state - these will hold the editable values
+  const [adminBasePricePerAircraft, setAdminBasePricePerAircraft] = useState(basePricePerAircraft)
+  const [adminModulePrices, setAdminModulePrices] = useState(modulePrices)
+  
+  // Current pricing state - these are the actual values used by the calculator
+  const [currentBasePricePerAircraft, setCurrentBasePricePerAircraft] = useState(basePricePerAircraft)
+  const [currentModulePrices, setCurrentModulePrices] = useState(modulePrices)
+  
+  // Module visibility state - controls which modules are shown on the website
+  const [moduleVisibility, setModuleVisibility] = useState({
+    basicMaintenance: true,
+    predictiveAnalytics: true,
+    realTimeMonitoring: true,
+    advancedReporting: true,
+    apiIntegrations: true,
+    prioritySupport: true,
+    training: true,
+    customIntegrations: true,
+    dedicatedManager: true,
+    premiumSupport: true
+  })
+  
+  // Module order state - controls the order of modules displayed
+  const [moduleOrder, setModuleOrder] = useState([
+    'basicMaintenance',
+    'predictiveAnalytics',
+    'realTimeMonitoring',
+    'advancedReporting',
+    'apiIntegrations',
+    'prioritySupport',
+    'training',
+    'customIntegrations',
+    'dedicatedManager',
+    'premiumSupport'
+  ])
+  
+  const moduleLabels = {
+    basicMaintenance: 'Basic Maintenance Scheduling',
+    predictiveAnalytics: 'AI Predictive Analytics',
+    realTimeMonitoring: 'Real-time Fleet Monitoring',
+    advancedReporting: 'Advanced Reporting & Analytics',
+    apiIntegrations: 'API Integrations',
+    prioritySupport: 'Priority Support',
+    training: 'Training & Onboarding',
+    customIntegrations: 'Custom Integrations',
+    dedicatedManager: 'Dedicated Account Manager',
+    premiumSupport: '24/7 Premium Support'
+  }
+
+  // Dynamic module labels and prices (can be extended with new modules)
+  const [dynamicModuleLabels, setDynamicModuleLabels] = useState(moduleLabels)
+  const [dynamicModulePrices, setDynamicModulePrices] = useState(modulePrices)
+
+  // Base plan features state
+  const [basePlanFeatures, setBasePlanFeatures] = useState([
+    'Basic Maintenance Scheduling',
+    'Aircraft Status Tracking',
+    'Maintenance History Records',
+    'Standard Reporting Dashboard',
+    'Email Notifications',
+    'Basic User Management'
+  ])
+  const [newBasePlanFeature, setNewBasePlanFeature] = useState('')
+
+  // Loading states
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true)
+  const [isLoadingDiscountCodes, setIsLoadingDiscountCodes] = useState(true)
+  const [settingsError, setSettingsError] = useState(null)
+  const [discountCodesError, setDiscountCodesError] = useState(null)
+
+  // Load admin settings from Firestore on component mount
+  useEffect(() => {
+    const loadAdminSettings = async () => {
+      try {
+        setIsLoadingSettings(true)
+        const settings = await adminSettingsService.getSettings()
+        
+        if (settings.modulePrices) {
+          setAdminModulePrices(settings.modulePrices)
+          setCurrentModulePrices(settings.modulePrices)
+          setDynamicModulePrices(settings.modulePrices)
+        }
+        
+        if (settings.moduleVisibility) {
+          setModuleVisibility(settings.moduleVisibility)
+        }
+        
+        if (settings.moduleLabels) {
+          setDynamicModuleLabels(settings.moduleLabels)
+          
+          // Update moduleOrder to include all modules from Firebase
+          // Keep existing order for known modules, add new ones at the end
+          const existingModules = Object.keys(settings.moduleLabels)
+          setModuleOrder(prevOrder => {
+            const newOrder = [...prevOrder]
+            existingModules.forEach(module => {
+              if (!newOrder.includes(module)) {
+                newOrder.push(module)
+              }
+            })
+            return newOrder
+          })
+          
+          // Update selectedModules to include new modules (unselected by default)
+          setSelectedModules(prevSelected => {
+            const newSelected = { ...prevSelected }
+            existingModules.forEach(module => {
+              if (!(module in newSelected)) {
+                newSelected[module] = false
+              }
+            })
+            return newSelected
+          })
+        }
+        
+        setSettingsError(null)
+      } catch (error) {
+        console.error('Error loading admin settings:', error)
+        setSettingsError('Failed to load admin settings')
+      } finally {
+        setIsLoadingSettings(false)
+      }
+    }
+
+    loadAdminSettings()
+  }, [])
+
+  // Load discount codes from Firestore on component mount
+  useEffect(() => {
+    const loadDiscountCodes = async () => {
+      try {
+        setIsLoadingDiscountCodes(true)
+        const codes = await discountCodesService.getDiscountCodes()
+        setDiscountCodes(codes)
+        setDiscountCodesError(null)
+      } catch (error) {
+        console.error('Error loading discount codes:', error)
+        setDiscountCodesError('Failed to load discount codes')
+        // Set default discount codes if loading fails
+        setDiscountCodes([
+          { code: 'SAVE10', type: 'percentage', value: 10, active: true, isOneTime: false, validUntil: null },
+          { code: 'WELCOME50', type: 'fixed', value: 50, active: true, isOneTime: true, validUntil: new Date('2024-12-31') },
+          { code: 'TRIAL20', type: 'percentage', value: 20, active: true, isOneTime: false, validUntil: new Date('2024-06-30') }
+        ])
+      } finally {
+        setIsLoadingDiscountCodes(false)
+      }
+    }
+
+    loadDiscountCodes()
+  }, [])
+
+  const calculateTotalPrice = () => {
+    let total = currentBasePricePerAircraft * aircraftCount
+    
+    Object.entries(selectedModules).forEach(([module, isSelected]) => {
+      if (isSelected) {
+        total += currentModulePrices[module] * aircraftCount
+      }
+    })
+    
+    return total
+  }
+  
+  const calculateDiscountedPrice = () => {
+    const baseTotal = calculateTotalPrice()
+    
+    if (!appliedDiscount) {
+      return baseTotal
+    }
+    
+    let discountAmount = 0
+    if (appliedDiscount.type === 'percentage') {
+      discountAmount = (baseTotal * appliedDiscount.value) / 100
+    } else {
+      discountAmount = appliedDiscount.value * aircraftCount
+    }
+    
+    return Math.max(0, baseTotal - discountAmount)
+  }
+  
+  const getDiscountAmount = () => {
+    const baseTotal = calculateTotalPrice()
+    const discountedTotal = calculateDiscountedPrice()
+    return baseTotal - discountedTotal
+  }
+  
+  // Discount code functions
+  const handleApplyDiscount = () => {
+    const code = discountCode.trim().toUpperCase()
+    
+    if (!code) {
+      setDiscountError('Please enter a discount code')
+      return
+    }
+    
+    const discount = discountCodes.find(d => d.code === code)
+    
+    if (!discount) {
+      setDiscountError('Invalid discount code')
+      return
+    }
+    
+    if (!discount.active) {
+      setDiscountError('This discount code is no longer active')
+      return
+    }
+    
+    if (discount.validUntil && new Date() > new Date(discount.validUntil)) {
+      setDiscountError('This discount code has expired')
+      return
+    }
+    
+    if (discount.isOneTime && usedOneTimeCodes.has(code)) {
+      setDiscountError('This discount code has already been used')
+      return
+    }
+    
+    // Apply the discount
+    setAppliedDiscount({ ...discount })
+    setDiscountError('')
+    
+    // Mark one-time codes as used
+    if (discount.isOneTime) {
+      setUsedOneTimeCodes(prev => new Set([...prev, code]))
+    }
+  }
+  
+  const handleRemoveDiscount = () => {
+    setAppliedDiscount(null)
+    setDiscountCode('')
+    setDiscountError('')
+  }
+  
+  // Admin discount functions
+  const handleAddDiscountCode = async () => {
+    if (!newDiscountCode.trim() || !newDiscountValue) {
+      alert('Please enter both discount code and value')
+      return
+    }
+    
+    const code = newDiscountCode.trim().toUpperCase()
+    
+    if (discountCodes.find(d => d.code === code)) {
+      alert('This discount code already exists')
+      return
+    }
+    
+    const newDiscount = {
+      code: code,
+      type: newDiscountType,
+      value: Number(newDiscountValue),
+      active: true,
+      isOneTime: newDiscountIsOneTime,
+      validUntil: newDiscountValidUntil ? new Date(newDiscountValidUntil) : null
+    }
+    
+    try {
+      // Save to Firestore
+      await discountCodesService.addDiscountCode(newDiscount)
+      
+      // Update local state
+      setDiscountCodes(prev => [...prev, { id: code, ...newDiscount }])
+      
+      // Reset form
+      setNewDiscountCode('')
+      setNewDiscountValue('')
+      setNewDiscountIsOneTime(false)
+      setNewDiscountValidUntil('')
+      setShowDiscountModal(false)
+      
+      alert('Discount code created successfully!')
+    } catch (error) {
+      console.error('Error adding discount code:', error)
+      alert('Failed to create discount code. Please try again.')
+    }
+  }
+  
+  const handleToggleDiscountStatus = async (code) => {
+    try {
+      console.log('🔄 Toggling discount status for code:', code)
+      const discountToUpdate = discountCodes.find(d => d.code === code)
+      console.log('📋 Found discount to update:', discountToUpdate)
+      
+      if (!discountToUpdate) {
+        console.error('❌ Discount code not found:', code)
+        return
+      }
+      
+      // Only pass the fields that should be updated, excluding 'id'
+      const updateData = {
+        active: !discountToUpdate.active,
+        updatedAt: new Date()
+      }
+      console.log('📝 Update data:', updateData)
+      
+      // Update in Firestore
+      console.log('🔥 Calling Firebase updateDiscountCode...')
+      await discountCodesService.updateDiscountCode(code, updateData)
+      console.log('✅ Firebase update completed successfully!')
+      
+      // Update local state
+      setDiscountCodes(prev => prev.map(discount => 
+        discount.code === code 
+          ? { ...discount, active: !discount.active }
+          : discount
+      ))
+      console.log('🔄 Local state updated successfully!')
+    } catch (error) {
+      console.error('❌ Error toggling discount status:', error)
+      alert('Failed to update discount code status. Please try again.')
+    }
+  }
+  
+  const handleDeleteDiscountCode = async (code) => {
+    if (confirm(`Are you sure you want to delete the discount code "${code}"?`)) {
+      try {
+        // Delete from Firestore
+        await discountCodesService.deleteDiscountCode(code)
+        
+        // Update local state
+        setDiscountCodes(prev => prev.filter(discount => discount.code !== code))
+        
+        // Remove from applied discount if it's currently applied
+        if (appliedDiscount && appliedDiscount.code === code) {
+          handleRemoveDiscount()
+        }
+      } catch (error) {
+        console.error('Error deleting discount code:', error)
+        alert('Failed to delete discount code. Please try again.')
+      }
+    }
+  }
+  
+  // Edit discount code functions
+  const handleStartEditDiscount = (code) => {
+    const discountToEdit = discountCodes.find(d => d.code === code)
+    if (discountToEdit) {
+      setEditingDiscountCode(code)
+      setEditFormData({
+        code: discountToEdit.code,
+        type: discountToEdit.type,
+        value: discountToEdit.value,
+        isOneTime: discountToEdit.isOneTime,
+        validUntil: discountToEdit.validUntil ? new Date(discountToEdit.validUntil).toISOString().split('T')[0] : ''
+      })
+    }
+  }
+  
+  const handleSaveEditDiscount = async (originalCode) => {
+    if (!editFormData.code.trim() || !editFormData.value) {
+      alert('Please enter both discount code and value')
+      return
+    }
+    
+    const newCode = editFormData.code.trim().toUpperCase()
+    
+    // Check if the new code already exists (unless it's the same code)
+    if (newCode !== originalCode && discountCodes.find(d => d.code === newCode)) {
+      alert('This discount code already exists')
+      return
+    }
+    
+    try {
+      const originalDiscount = discountCodes.find(d => d.code === originalCode)
+      const updatedDiscount = {
+        code: newCode,
+        type: editFormData.type,
+        value: Number(editFormData.value),
+        isOneTime: editFormData.isOneTime,
+        validUntil: editFormData.validUntil ? new Date(editFormData.validUntil) : null,
+        active: originalDiscount ? originalDiscount.active : true
+      }
+      
+      // If code changed, delete old and create new
+      if (newCode !== originalCode) {
+        await discountCodesService.deleteDiscountCode(originalCode)
+        await discountCodesService.addDiscountCode(updatedDiscount)
+      } else {
+        // Just update existing
+        await discountCodesService.updateDiscountCode(originalCode, updatedDiscount)
+      }
+      
+      // Update local state
+      setDiscountCodes(prev => prev.map(discount => 
+        discount.code === originalCode 
+          ? {
+              ...discount,
+              code: newCode,
+              type: editFormData.type,
+              value: Number(editFormData.value),
+              isOneTime: editFormData.isOneTime,
+              validUntil: editFormData.validUntil ? new Date(editFormData.validUntil) : null,
+              active: discount.active
+            }
+          : discount
+      ))
+      
+      // Update applied discount if it's currently applied
+      if (appliedDiscount && appliedDiscount.code === originalCode) {
+        setAppliedDiscount({
+          code: newCode,
+          type: editFormData.type,
+          value: Number(editFormData.value),
+          isOneTime: editFormData.isOneTime,
+          validUntil: editFormData.validUntil ? new Date(editFormData.validUntil) : null
+        })
+      }
+      
+      setEditingDiscountCode(null)
+      setEditFormData({})
+    } catch (error) {
+      console.error('Error updating discount code:', error)
+      alert('Failed to update discount code. Please try again.')
+    }
+  }
+  
+  const handleCancelEditDiscount = () => {
+    setEditingDiscountCode(null)
+    setEditFormData({})
+  }
+  
+  const handleEditFormChange = (field, value) => {
+    setEditFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const handleModuleChange = (module) => {
+    if (module === 'basicMaintenance') return // Can't uncheck basic maintenance
+    
+    setSelectedModules(prev => ({
+      ...prev,
+      [module]: !prev[module]
+    }))
+  }
+
+  // Admin functions
+  const handleAdminClick = () => {
+    setShowAccessModal(true)
+  }
+
+  const handleAccessSubmit = () => {
+    if (accessCode === '007') {
+      setIsAdmin(true)
+      setShowAccessModal(false)
+      setShowAdminModal(true)
+      setAccessCode('')
+    } else {
+      alert('Invalid access code')
+      setAccessCode('')
+    }
+  }
+
+  const handleCloseModals = () => {
+    setShowAccessModal(false)
+    setShowAdminModal(false)
+    setAccessCode('')
+  }
+
+  const handleSaveChanges = async () => {
+    try {
+      // Prepare settings object
+      const settings = {
+        modulePrices: adminModulePrices,
+        moduleVisibility: moduleVisibility,
+        moduleLabels: dynamicModuleLabels
+      }
+      
+      // Save to Firestore
+      await adminSettingsService.saveSettings(settings)
+      
+      // Update the current pricing with admin values
+      setCurrentBasePricePerAircraft(adminBasePricePerAircraft)
+      setCurrentModulePrices(adminModulePrices)
+      
+      // Close the admin modal
+      setShowAdminModal(false)
+      
+      // Show success message
+      alert('Pricing changes saved successfully!')
+    } catch (error) {
+      console.error('Error saving admin settings:', error)
+      alert('Failed to save changes. Please try again.')
+    }
+  }
+
+  const handleAdminBasePriceChange = (value) => {
+    setAdminBasePricePerAircraft(Number(value))
+  }
+
+  const handleAdminModulePriceChange = (module, value) => {
+    setAdminModulePrices(prev => ({
+      ...prev,
+      [module]: Number(value)
+    }))
+  }
+
+  const handleAddNewModule = () => {
+    setShowAddModuleModal(true)
+  }
+
+  const handleSaveNewModule = async () => {
+    if (!newModuleName.trim() || !newModulePrice) {
+      alert('Please enter both module name and price')
+      return
+    }
+
+    console.log('🔄 Starting new module save process...')
+    console.log('Module name:', newModuleName)
+    console.log('Module price:', newModulePrice)
+
+    try {
+      // Create a unique key for the new module
+      const moduleKey = newModuleName.toLowerCase().replace(/[^a-z0-9]/g, '')
+      console.log('Generated module key:', moduleKey)
+      
+      // Prepare updated data
+      const updatedModuleLabels = {
+        ...dynamicModuleLabels,
+        [moduleKey]: newModuleName.trim()
+      }
+      
+      const updatedModulePrices = {
+        ...adminModulePrices,
+        [moduleKey]: Number(newModulePrice)
+      }
+      
+      const updatedModuleVisibility = {
+        ...moduleVisibility,
+        [moduleKey]: true
+      }
+      
+      // Save to Firebase
+      const settings = {
+        modulePrices: updatedModulePrices,
+        moduleVisibility: updatedModuleVisibility,
+        moduleLabels: updatedModuleLabels
+      }
+      
+      console.log('📤 Saving settings to Firebase:', settings)
+      await adminSettingsService.saveSettings(settings)
+      console.log('✅ Firebase save completed successfully!')
+      
+      // Update local state after successful save
+      setDynamicModuleLabels(updatedModuleLabels)
+      setDynamicModulePrices(updatedModulePrices)
+      setAdminModulePrices(updatedModulePrices)
+      setCurrentModulePrices(updatedModulePrices)
+      setModuleVisibility(updatedModuleVisibility)
+      
+      // Add to selected modules (unselected by default)
+      setSelectedModules(prev => ({
+        ...prev,
+        [moduleKey]: false
+      }))
+      
+      // Add to module order (at the end)
+      setModuleOrder(prev => [...prev, moduleKey])
+      
+      // Reset form and close modal
+      setNewModuleName('')
+      setNewModulePrice('')
+      setShowAddModuleModal(false)
+      
+      alert('New module added successfully!')
+    } catch (error) {
+      console.error('Error adding new module:', error)
+      alert('Failed to add new module. Please try again.')
+    }
+  }
+
+  const handleToggleModuleVisibility = (module) => {
+    setModuleVisibility(prev => ({
+      ...prev,
+      [module]: !prev[module]
+    }))
+  }
+
+  const handleCloseAddModuleModal = () => {
+    setShowAddModuleModal(false)
+    setNewModuleName('')
+    setNewModulePrice('')
+  }
+
+  // Base plan features management functions
+  const handleAddBasePlanFeature = () => {
+    if (!newBasePlanFeature.trim()) {
+      alert('Please enter a feature name')
+      return
+    }
+    
+    setBasePlanFeatures(prev => [...prev, newBasePlanFeature.trim()])
+    setNewBasePlanFeature('')
+  }
+
+  const handleRemoveBasePlanFeature = (index) => {
+    setBasePlanFeatures(prev => prev.filter((_, i) => i !== index))
+  }
+
+  // Module reordering functions
+  const handleMoveModuleUp = (moduleKey) => {
+    const currentIndex = moduleOrder.indexOf(moduleKey)
+    if (currentIndex > 0) {
+      const newOrder = [...moduleOrder]
+      const temp = newOrder[currentIndex]
+      newOrder[currentIndex] = newOrder[currentIndex - 1]
+      newOrder[currentIndex - 1] = temp
+      setModuleOrder(newOrder)
+    }
+  }
+
+  const handleMoveModuleDown = (moduleKey) => {
+    const currentIndex = moduleOrder.indexOf(moduleKey)
+    if (currentIndex < moduleOrder.length - 1) {
+      const newOrder = [...moduleOrder]
+      const temp = newOrder[currentIndex]
+      newOrder[currentIndex] = newOrder[currentIndex + 1]
+      newOrder[currentIndex + 1] = temp
+      setModuleOrder(newOrder)
+    }
+  }
+
+  const handleDeleteModule = async (moduleKey) => {
+    // Prevent deletion of basic maintenance module
+    if (moduleKey === 'basicMaintenance') {
+      alert('Cannot delete the Basic Maintenance module as it is required.')
+      return
+    }
+
+    // Confirm deletion
+    if (!confirm(`Are you sure you want to delete the "${dynamicModuleLabels[moduleKey]}" module? This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      // Prepare updated data with module removed
+      const updatedModuleLabels = { ...dynamicModuleLabels }
+      delete updatedModuleLabels[moduleKey]
+      
+      const updatedModulePrices = { ...adminModulePrices }
+      delete updatedModulePrices[moduleKey]
+      
+      const updatedModuleVisibility = { ...moduleVisibility }
+      delete updatedModuleVisibility[moduleKey]
+      
+      // Save to Firebase
+      const settings = {
+        modulePrices: updatedModulePrices,
+        moduleVisibility: updatedModuleVisibility,
+        moduleLabels: updatedModuleLabels
+      }
+      
+      await adminSettingsService.saveSettings(settings)
+      
+      // Update local state after successful save
+      setDynamicModuleLabels(updatedModuleLabels)
+      setDynamicModulePrices(updatedModulePrices)
+      setAdminModulePrices(updatedModulePrices)
+      setCurrentModulePrices(updatedModulePrices)
+      setModuleVisibility(updatedModuleVisibility)
+      
+      setSelectedModules(prev => {
+        const updated = { ...prev }
+        delete updated[moduleKey]
+        return updated
+      })
+
+      // Remove from module order
+      setModuleOrder(prev => prev.filter(module => module !== moduleKey))
+
+      alert('Module deleted successfully!')
+    } catch (error) {
+      console.error('Error deleting module:', error)
+      alert('Failed to delete module. Please try again.')
+    }
+  }
+
+  const totalPrice = calculateTotalPrice()
+  const discountedPrice = calculateDiscountedPrice()
+  const discountAmount = getDiscountAmount()
+  const selectedModuleCount = Object.values(selectedModules).filter(Boolean).length
+
+  return (
+    <motion.div
+      className="max-w-6xl mx-auto"
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true }}
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Configuration Panel */}
+        <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-8 flex flex-col h-full">
+          <div className="flex items-center justify-between mb-6 group">
+            <h3 className="text-2xl font-bold text-slate-800">Configure Your Plan</h3>
+            <button
+              onClick={handleAdminClick}
+              className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 hover:bg-slate-100 rounded-lg"
+              title="Admin Settings"
+            >
+              <Edit className="w-4 h-4 text-slate-400 hover:text-slate-600" />
+            </button>
+          </div>
+          
+          {/* Aircraft Count Selector */}
+          <div className="mb-8">
+            <label className="block text-sm font-semibold text-slate-700 mb-3">
+              Number of Aircraft
+            </label>
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setAircraftCount(Math.max(1, aircraftCount - 1))}
+                className="w-10 h-10 p-0"
+              >
+                -
+              </Button>
+              <div className="flex-1">
+                <input
+                  type="range"
+                  min="1"
+                  max="100"
+                  value={aircraftCount}
+                  onChange={(e) => setAircraftCount(parseInt(e.target.value))}
+                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer slider"
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setAircraftCount(Math.min(100, aircraftCount + 1))}
+                className="w-10 h-10 p-0"
+              >
+                +
+              </Button>
+              <div className="min-w-[3rem] text-center">
+                <span className="text-2xl font-bold text-orange-500">{aircraftCount}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Module Selection */}
+          <div className="flex-1 flex flex-col">
+            <label className="block text-sm font-semibold text-slate-700 mb-4">
+              Select Modules ({selectedModuleCount} selected)
+            </label>
+            <div className="space-y-2 overflow-y-auto mb-4 flex-1" style={{minHeight: '200px', maxHeight: '70vh'}}>
+              {moduleOrder
+                .filter(module => moduleVisibility[module] && dynamicModuleLabels[module])
+                .map(module => {
+                const label = dynamicModuleLabels[module]
+                const isBasic = module === 'basicMaintenance'
+                const isSelected = selectedModules[module]
+                const price = currentModulePrices[module]
+                
+                return (
+                  <div
+                    key={module}
+                    className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
+                      isSelected 
+                        ? 'bg-orange-50 border-orange-200' 
+                        : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
+                    } ${isBasic ? 'opacity-75' : 'cursor-pointer'}`}
+                    onClick={() => !isBasic && handleModuleChange(module)}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                        isSelected 
+                          ? 'bg-orange-500 border-orange-500' 
+                          : 'border-slate-300'
+                      }`}>
+                        {isSelected && <CheckCircle className="w-3 h-3 text-white" />}
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-slate-800">{label}</span>
+                        {isBasic && <span className="text-xs text-slate-500 block">Included in base plan</span>}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm font-semibold text-slate-700">
+                        {price === 0 ? 'Included' : `$${price}/aircraft`}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            
+            {/* Professional Disclaimer - Always at bottom */}
+            <div className="mt-auto p-4 bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-lg shadow-sm">
+              <p className="text-xs text-slate-600 leading-relaxed">
+                <strong className="text-slate-800">Pricing Estimate:</strong> The above pricing is a recommended estimate based on standard configurations and may vary depending on specific implementation requirements, customization needs, and enterprise-level integrations. Final pricing will be confirmed during the consultation phase and may be subject to adjustment based on your organization's unique operational requirements and compliance standards.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Pricing Summary */}
+        <div className="bg-gradient-to-br from-orange-500 to-red-500 rounded-xl shadow-xl p-8 text-white">
+          <h3 className="text-2xl font-bold mb-6">Your Custom Plan</h3>
+          
+          <div className="space-y-4 mb-8">
+            <div className="pb-4 border-b border-white/20">
+              <div className="flex justify-between items-center mb-3">
+                <span>Base Plan ({aircraftCount} aircraft)</span>
+                <span className="font-semibold">${currentBasePricePerAircraft * aircraftCount}</span>
+              </div>
+              <div className="text-xs text-white/80 space-y-1">
+                <div className="font-medium mb-2">Includes:</div>
+                {basePlanFeatures.map((feature, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <CheckCircle className="w-3 h-3 flex-shrink-0" />
+                    <span>{feature}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {Object.entries(selectedModules).map(([module, isSelected]) => {
+              if (!isSelected || currentModulePrices[module] === 0) return null
+              
+              return (
+                <div key={module} className="flex justify-between items-center">
+                  <span className="text-sm">{dynamicModuleLabels[module]}</span>
+                  <span className="font-semibold">${currentModulePrices[module] * aircraftCount}</span>
+                </div>
+              )
+            })}
+          </div>
+          
+          {/* Discount Code Section */}
+          <div className="border-t border-white/20 pt-6 mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium">Have a discount code?</span>
+              <button
+                onClick={() => setShowDiscountInput(!showDiscountInput)}
+                className="text-xs text-white/80 hover:text-white underline"
+              >
+                {showDiscountInput ? 'Hide' : 'Add Code'}
+              </button>
+            </div>
+            
+            {showDiscountInput && (
+              <div className="space-y-3">
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={discountCode}
+                    onChange={(e) => {
+                      setDiscountCode(e.target.value)
+                      setDiscountError('')
+                    }}
+                    onKeyPress={(e) => e.key === 'Enter' && handleApplyDiscount()}
+                    placeholder="Enter discount code"
+                    className="flex-1 px-3 py-2 text-sm text-slate-800 rounded-lg border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/50"
+                  />
+                  <Button
+                    onClick={handleApplyDiscount}
+                    size="sm"
+                    className="bg-white/20 hover:bg-white/30 text-white border-white/20"
+                  >
+                    Apply
+                  </Button>
+                </div>
+                
+                {discountError && (
+                  <p className="text-xs text-red-200">{discountError}</p>
+                )}
+                
+                {appliedDiscount && (
+                  <div className="flex items-center justify-between bg-white/10 rounded-lg p-3">
+                    <div>
+                      <span className="text-sm font-medium">{appliedDiscount.code}</span>
+                      <p className="text-xs text-white/80">
+                        {appliedDiscount.type === 'percentage' 
+                          ? `${appliedDiscount.value}% off` 
+                          : `$${appliedDiscount.value} off per aircraft`
+                        }
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleRemoveDiscount}
+                      className="text-white/60 hover:text-white text-xs"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          
+          <div className="border-t border-white/20 pt-6 mb-8">
+            {appliedDiscount && (
+              <div className="space-y-2 mb-4">
+                <div className="flex justify-between items-center text-sm">
+                  <span>Subtotal</span>
+                  <span>${totalPrice.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm text-green-200">
+                  <span>Discount ({appliedDiscount.code})</span>
+                  <span>-${discountAmount.toLocaleString()}</span>
+                </div>
+              </div>
+            )}
+            
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-lg">Total Monthly Cost</span>
+              <span className="text-4xl font-bold">${discountedPrice.toLocaleString()}</span>
+            </div>
+            <p className="text-white/80 text-sm">
+              ${(discountedPrice / aircraftCount).toFixed(0)} per aircraft per month
+            </p>
+            
+            {appliedDiscount && (
+              <p className="text-green-200 text-xs mt-2">
+                You save ${discountAmount.toLocaleString()} per month!
+              </p>
+            )}
+          </div>
+          
+          <div className="space-y-3">
+            <Button className="w-full bg-white text-orange-500 hover:bg-slate-100 font-semibold">
+              Start 7-Day Free Trial
+            </Button>
+            <Button variant="outline" className="w-full border-white text-white hover:bg-white/10">
+              Contact Sales Team
+            </Button>
+            <button 
+              onClick={() => setShowQuoteModal(true)}
+              className="w-full text-center text-white/80 hover:text-white text-sm underline underline-offset-2 hover:underline-offset-4 transition-all duration-200 mt-2"
+            >
+              Export Quote
+            </button>
+          </div>
+          
+          <div className="mt-6 pt-6 border-t border-white/20">
+            <div className="flex items-center space-x-2 text-sm text-white/80">
+              <CheckCircle className="w-4 h-4" />
+              <span>7-day free trial</span>
+            </div>
+            <div className="flex items-center space-x-2 text-sm text-white/80 mt-1">
+              <CheckCircle className="w-4 h-4" />
+              <span>No setup fees • Cancel anytime</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Access Code Modal */}
+      {showAccessModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
+            <h3 className="text-lg font-bold text-slate-800 mb-4">Admin Access Required</h3>
+            <p className="text-slate-600 mb-4">Please enter the access code to continue:</p>
+            <input
+              type="password"
+              value={accessCode}
+              onChange={(e) => setAccessCode(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleAccessSubmit()}
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 mb-4"
+              placeholder="Enter access code"
+              autoFocus
+            />
+            <div className="flex space-x-3">
+              <Button onClick={handleAccessSubmit} className="flex-1 bg-orange-500 hover:bg-orange-600">
+                Submit
+              </Button>
+              <Button onClick={handleCloseModals} variant="outline" className="flex-1">
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Admin Modal */}
+      {showAdminModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-7xl max-h-[95vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white">
+              <h3 className="text-2xl font-bold text-slate-800">Admin Panel - Pricing Management</h3>
+              <button onClick={handleCloseModals} className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-full transition-colors">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+              {/* Base Pricing Settings */}
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-slate-800">Base Pricing</h4>
+                <div className="bg-slate-50 p-4 rounded-lg">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Base Price per Aircraft ($/month)
+                  </label>
+                  <input
+                    type="number"
+                    value={adminBasePricePerAircraft}
+                    onChange={(e) => handleAdminBasePriceChange(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  />
+                </div>
+                
+                {/* Base Plan Features Management */}
+                <div className="bg-slate-50 p-4 rounded-lg">
+                  <h5 className="text-md font-medium text-slate-700 mb-3">Base Plan Features</h5>
+                  <div className="space-y-2 mb-3 max-h-40 overflow-y-auto">
+                    {basePlanFeatures.map((feature, index) => (
+                      <div key={index} className="flex items-center justify-between bg-white p-2 rounded border group">
+                        <input
+                          type="text"
+                          value={feature}
+                          onChange={(e) => {
+                            const newFeatures = [...basePlanFeatures]
+                            newFeatures[index] = e.target.value
+                            setBasePlanFeatures(newFeatures)
+                          }}
+                          className="flex-1 text-sm text-slate-700 bg-transparent border-none outline-none focus:bg-slate-50 focus:px-2 focus:py-1 focus:rounded transition-all"
+                        />
+                        <div className="flex items-center space-x-1">
+                          <button
+                            className="text-slate-400 hover:text-slate-600 p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Edit feature"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => handleRemoveBasePlanFeature(index)}
+                            className="text-red-500 hover:text-red-700 p-1"
+                            title="Remove feature"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      value={newBasePlanFeature}
+                      onChange={(e) => setNewBasePlanFeature(e.target.value)}
+                      placeholder="Add new feature"
+                      className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      onKeyPress={(e) => e.key === 'Enter' && handleAddBasePlanFeature()}
+                    />
+                    <Button
+                      onClick={handleAddBasePlanFeature}
+                      size="sm"
+                      className="bg-green-500 hover:bg-green-600"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              
+                {/* Module Pricing Settings */}
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-slate-800">Module Pricing, Visibility & Order</h4>
+                  {settingsError && (
+                    <div className="text-red-600 text-xs mb-2 p-2 bg-red-50 rounded">
+                      {settingsError}
+                    </div>
+                  )}
+                  <div className="space-y-2 overflow-y-auto bg-slate-50 p-4 rounded-lg" style={{maxHeight: '60vh'}}>
+                  {isLoadingSettings ? (
+                    <div className="text-center py-4">
+                      <div className="text-xs text-slate-500">Loading admin settings...</div>
+                    </div>
+                  ) : (
+                  moduleOrder.filter(module => dynamicModuleLabels[module]).map((module, index) => {
+                    const label = dynamicModuleLabels[module]
+                    return (
+                      <div key={module} className="bg-white p-3 rounded-lg border border-slate-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="block text-sm font-medium text-slate-700">
+                            {label}
+                          </label>
+                          <div className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-1">
+                              <button
+                                onClick={() => handleMoveModuleUp(module)}
+                                disabled={index === 0}
+                                className="p-1 text-slate-400 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                                title="Move up"
+                              >
+                                ↑
+                              </button>
+                              <button
+                                onClick={() => handleMoveModuleDown(module)}
+                                disabled={index === moduleOrder.length - 1}
+                                className="p-1 text-slate-400 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                                title="Move down"
+                              >
+                                ↓
+                              </button>
+                              <button
+                                onClick={() => handleDeleteModule(module)}
+                                disabled={module === 'basicMaintenance'}
+                                className="p-1 text-red-400 hover:text-red-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                                title={module === 'basicMaintenance' ? 'Cannot delete required module' : 'Delete module'}
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                            <span className="text-xs text-slate-500">Visible:</span>
+                            <input
+                              type="checkbox"
+                              checked={moduleVisibility[module]}
+                              onChange={() => handleToggleModuleVisibility(module)}
+                              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            />
+                          </div>
+                        </div>
+                        <input
+                          type="number"
+                          value={adminModulePrices[module]}
+                          onChange={(e) => handleAdminModulePriceChange(module, e.target.value)}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                          placeholder="Price per aircraft"
+                        />
+                      </div>
+                    )
+                  }))
+                }
+                </div>
+                </div>
+                
+                {/* Third Column - Discount Code Management */}
+                <div className="space-y-3">
+                  <h4 className="text-lg font-semibold text-slate-800">Discount Code Management</h4>
+                  
+                  {/* Existing Discount Codes */}
+                  <div className="bg-slate-50 p-3 rounded-lg">
+                    <h5 className="text-sm font-medium text-slate-700 mb-2">Existing Discount Codes</h5>
+                    {discountCodesError && (
+                      <div className="text-red-600 text-xs mb-2 p-2 bg-red-50 rounded">
+                        {discountCodesError}
+                      </div>
+                    )}
+                    <div className="space-y-1 mb-3 max-h-48 overflow-y-auto">
+                      {isLoadingDiscountCodes ? (
+                        <div className="text-center py-4">
+                          <div className="text-xs text-slate-500">Loading discount codes...</div>
+                        </div>
+                      ) : discountCodes.length === 0 ? (
+                        <div className="text-center py-4">
+                          <div className="text-xs text-slate-500">No discount codes found</div>
+                        </div>
+                      ) : (
+                        discountCodes.map((code) => (
+                        <div key={code.code} className="bg-white p-2 rounded border text-xs">
+                          {editingDiscountCode === code.code ? (
+                            // Edit Mode
+                            <div className="space-y-2">
+                              <div className="grid grid-cols-3 gap-2">
+                                <input
+                                  type="text"
+                                  value={editFormData.code || ''}
+                                  onChange={(e) => handleEditFormChange('code', e.target.value.toUpperCase())}
+                                  className="px-2 py-1 border rounded text-xs font-mono"
+                                  placeholder="CODE"
+                                />
+                                <select
+                                  value={editFormData.type || 'percentage'}
+                                  onChange={(e) => handleEditFormChange('type', e.target.value)}
+                                  className="px-2 py-1 border rounded text-xs"
+                                >
+                                  <option value="percentage">%</option>
+                                  <option value="fixed">$</option>
+                                </select>
+                                <input
+                                  type="number"
+                                  value={editFormData.value || ''}
+                                  onChange={(e) => handleEditFormChange('value', e.target.value)}
+                                  className="px-2 py-1 border rounded text-xs"
+                                  placeholder="Value"
+                                />
+                              </div>
+                              <div className="grid grid-cols-2 gap-2">
+                                <input
+                                  type="date"
+                                  value={editFormData.validUntil || ''}
+                                  onChange={(e) => handleEditFormChange('validUntil', e.target.value)}
+                                  className="px-2 py-1 border rounded text-xs"
+                                />
+                                <label className="flex items-center space-x-1">
+                                  <input
+                                    type="checkbox"
+                                    checked={editFormData.isOneTime || false}
+                                    onChange={(e) => handleEditFormChange('isOneTime', e.target.checked)}
+                                    className="w-3 h-3"
+                                  />
+                                  <span className="text-xs">One-time</span>
+                                </label>
+                              </div>
+                              <div className="flex space-x-1">
+                                <button
+                                  onClick={() => handleSaveEditDiscount(code.code)}
+                                  className="px-2 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={handleCancelEditDiscount}
+                                  className="px-2 py-1 bg-gray-500 text-white rounded text-xs hover:bg-gray-600"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            // View Mode
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center space-x-1 mb-1">
+                                  <span className="font-mono font-medium">{code.code}</span>
+                                  <span className={`px-1 py-0.5 rounded text-xs ${
+                                    code.type === 'percentage' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+                                  }`}>
+                                    {code.type === 'percentage' ? `${code.value}%` : `$${code.value}`}
+                                  </span>
+                                  {code.isOneTime && (
+                                    <span className="px-1 py-0.5 rounded text-xs bg-yellow-100 text-yellow-800">
+                                      One-time
+                                    </span>
+                                  )}
+                                  <span className={`px-1 py-0.5 rounded text-xs ${
+                                    code.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                  }`}>
+                                    {code.active ? 'Active' : 'Inactive'}
+                                  </span>
+                                </div>
+                                {code.validUntil && (
+                                  <div className="text-xs text-slate-500">
+                                    Until {new Date(code.validUntil).toLocaleDateString()}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex items-center space-x-1 ml-2">
+                                <button
+                                  onClick={() => handleStartEditDiscount(code.code)}
+                                  className="p-1 text-blue-500 hover:text-blue-700"
+                                  title="Edit code"
+                                >
+                                  <Edit className="w-3 h-3" />
+                                </button>
+                                <button
+                                  onClick={() => handleToggleDiscountStatus(code.code)}
+                                  className={`px-1 py-0.5 text-xs rounded ${
+                                    code.active ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-green-100 text-green-700 hover:bg-green-200'
+                                  }`}>
+                                  {code.active ? 'Deactivate' : 'Reactivate'}
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteDiscountCode(code.code)}
+                                  className="p-1 text-red-500 hover:text-red-700"
+                                  title="Delete code"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Add New Discount Code */}
+                  <div className="bg-slate-50 p-3 rounded-lg">
+                    <h5 className="text-sm font-medium text-slate-700 mb-2">Add New Discount Code</h5>
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-3 gap-2">
+                        <input
+                          type="text"
+                          value={newDiscountCode}
+                          onChange={(e) => setNewDiscountCode(e.target.value.toUpperCase())}
+                          className="px-2 py-1 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-500 font-mono"
+                          placeholder="CODE"
+                        />
+                        <select
+                          value={newDiscountType}
+                          onChange={(e) => setNewDiscountType(e.target.value)}
+                          className="px-2 py-1 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-500"
+                        >
+                          <option value="percentage">%</option>
+                          <option value="fixed">$</option>
+                        </select>
+                        <input
+                          type="number"
+                          value={newDiscountValue}
+                          onChange={(e) => setNewDiscountValue(e.target.value)}
+                          className="px-2 py-1 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-500"
+                          placeholder="Value"
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="date"
+                          value={newDiscountValidUntil}
+                          onChange={(e) => setNewDiscountValidUntil(e.target.value)}
+                          className="px-2 py-1 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-500"
+                          placeholder="Valid until"
+                        />
+                        <label className="flex items-center space-x-1">
+                          <input
+                            type="checkbox"
+                            checked={newDiscountIsOneTime}
+                            onChange={(e) => setNewDiscountIsOneTime(e.target.checked)}
+                            className="w-3 h-3 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                          />
+                          <span className="text-xs text-slate-600">One-time</span>
+                        </label>
+                      </div>
+                      
+                      <Button
+                        onClick={handleAddDiscountCode}
+                        size="sm"
+                        className="w-full bg-green-500 hover:bg-green-600 text-xs py-1"
+                        disabled={!newDiscountCode || !newDiscountValue}
+                      >
+                        Add Code
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="border-t border-slate-200 p-6 bg-gradient-to-r from-slate-50 to-white">
+              <div className="flex justify-between items-center">
+                <div className="flex space-x-3">
+                  <Button onClick={handleSaveChanges} className="bg-green-500 hover:bg-green-600 px-6 shadow-sm">
+                    Save Changes
+                  </Button>
+                  <Button onClick={handleAddNewModule} className="bg-blue-500 hover:bg-blue-600 px-6 shadow-sm">
+                    Add New Module
+                  </Button>
+                </div>
+                <Button onClick={handleCloseModals} variant="outline" className="px-6">
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Add New Module Modal */}
+      {showAddModuleModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
+            <h3 className="text-lg font-bold text-slate-800 mb-4">Add New Module</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Module Name
+                </label>
+                <input
+                  type="text"
+                  value={newModuleName}
+                  onChange={(e) => setNewModuleName(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  placeholder="Enter module name"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Price per Aircraft ($/month)
+                </label>
+                <input
+                  type="number"
+                  value={newModulePrice}
+                  onChange={(e) => setNewModulePrice(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  placeholder="Enter price"
+                />
+              </div>
+            </div>
+            <div className="flex space-x-3 mt-6">
+              <Button onClick={handleSaveNewModule} className="flex-1 bg-green-500 hover:bg-green-600">
+                Add Module
+              </Button>
+              <Button onClick={handleCloseAddModuleModal} variant="outline" className="flex-1">
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Quote Modal */}
+      {showQuoteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <motion.div
+            className="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.3 }}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-slate-200">
+              <h3 className="text-2xl font-bold text-slate-800">Quote Summary</h3>
+              <button 
+                onClick={() => setShowQuoteModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-full transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            {/* Content */}
+            <div className="p-6">
+              {/* Company Info */}
+              <div className="mb-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <img src={ammstroLogo} alt="AMMSTRO Logo" className="w-10 h-10" />
+                  <div>
+                    <h4 className="text-lg font-bold text-slate-800">AMMSTRO SDN BHD</h4>
+                    <p className="text-sm text-slate-600">Aviation Maintenance Management Solutions</p>
+                  </div>
+                </div>
+                <div className="text-sm text-slate-600">
+                  <p>Quote Date: {new Date().toLocaleDateString()}</p>
+                  <p>Valid Until: {new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}</p>
+                </div>
+              </div>
+              
+              {/* Configuration Summary */}
+              <div className="mb-6">
+                <h5 className="text-lg font-semibold text-slate-800 mb-3">Configuration</h5>
+                <div className="bg-slate-50 rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-slate-700">Fleet Size:</span>
+                    <span className="font-semibold">{aircraftCount} aircraft</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-700">Selected Modules:</span>
+                    <span className="font-semibold">{Object.values(selectedModules).filter(Boolean).length} modules</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Pricing Breakdown */}
+              <div className="mb-6">
+                <h5 className="text-lg font-semibold text-slate-800 mb-3">Pricing Breakdown</h5>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center py-2 border-b border-slate-200">
+                    <span className="text-slate-700">Base Plan ({aircraftCount} aircraft)</span>
+                    <span className="font-semibold">${(currentBasePricePerAircraft * aircraftCount).toLocaleString()}</span>
+                  </div>
+                  
+                  {Object.entries(selectedModules).map(([module, isSelected]) => {
+                    if (!isSelected || currentModulePrices[module] === 0) return null
+                    
+                    return (
+                      <div key={module} className="flex justify-between items-center py-2">
+                        <span className="text-slate-700">{dynamicModuleLabels[module]}</span>
+                        <span className="font-semibold">${(currentModulePrices[module] * aircraftCount).toLocaleString()}</span>
+                      </div>
+                    )
+                  })}
+                  
+                  {/* Subtotal */}
+                  <div className="flex justify-between items-center py-2 border-t-2 border-slate-300">
+                    <span className="font-semibold text-slate-700">Subtotal</span>
+                    <span className="font-semibold text-slate-700">${calculateTotalPrice().toLocaleString()}</span>
+                  </div>
+                  
+                  {/* Discount if applied */}
+                  {appliedDiscount && getDiscountAmount() > 0 && (
+                    <div className="flex justify-between items-center py-2">
+                      <span className="font-semibold text-pink-600">Discount ({appliedDiscount.code})</span>
+                      <span className="font-semibold text-pink-600">-${getDiscountAmount().toLocaleString()}</span>
+                    </div>
+                  )}
+                  
+                  {/* Final Total */}
+                  <div className="flex justify-between items-center py-3 border-t-2 border-slate-300 text-lg">
+                    <span className="font-bold text-slate-800">Total Monthly Cost</span>
+                    <span className="font-bold text-orange-600">${calculateDiscountedPrice().toLocaleString()}</span>
+                  </div>
+                  
+                  <div className="text-center text-sm text-slate-600">
+                    ${(calculateDiscountedPrice() / aircraftCount).toFixed(0)} per aircraft per month
+                  </div>
+                  
+                  {/* Savings message */}
+                  {appliedDiscount && getDiscountAmount() > 0 && (
+                    <div className="text-center text-sm text-green-600 font-medium mt-2">
+                      You save ${getDiscountAmount().toLocaleString()} per month!
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Included Features */}
+              <div className="mb-6">
+                <h5 className="text-lg font-semibold text-slate-800 mb-3">Included Features</h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {basePlanFeatures.map((feature, index) => (
+                    <div key={index} className="flex items-center space-x-2 text-sm text-slate-700">
+                      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      <span>{feature}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Terms */}
+              <div className="bg-slate-50 rounded-lg p-4 text-xs text-slate-600">
+                <p className="mb-2"><strong>Terms & Conditions:</strong></p>
+                <ul className="space-y-1 list-disc list-inside">
+                  <li>7-day free trial included with all plans</li>
+                  <li>No setup fees or cancellation charges</li>
+                  <li>Monthly billing with 30-day payment terms</li>
+                  <li>24/7 technical support included</li>
+                  <li>Pricing subject to final configuration and requirements</li>
+                </ul>
+              </div>
+            </div>
+            
+            {/* Footer */}
+            <div className="flex justify-between items-center p-6 border-t border-slate-200 bg-slate-50">
+              <button 
+                onClick={() => setShowQuoteModal(false)}
+                className="px-6 py-2 text-slate-600 hover:text-slate-800 transition-colors"
+              >
+                Close
+              </button>
+              <Button 
+                className="bg-orange-500 hover:bg-orange-600 px-6"
+                onClick={async () => {
+                  try {
+                    // Create minimal PDF document
+                    const doc = new jsPDF();
+                    
+                    // Add company logo
+                    const logoImg = new Image();
+                    logoImg.crossOrigin = 'anonymous';
+                    logoImg.src = ammstroLogo;
+                    
+                    logoImg.onload = () => {
+                      // Add logo to PDF (smaller)
+                      doc.addImage(logoImg, 'PNG', 20, 15, 20, 20);
+                      
+                      // Simple company header
+                      doc.setFontSize(18);
+                      doc.setTextColor(0, 0, 0);
+                      doc.setFont('helvetica', 'bold');
+                      doc.text('AMMSTRO', 45, 25);
+                      
+                      doc.setFontSize(10);
+                      doc.setTextColor(100, 100, 100);
+                      doc.setFont('helvetica', 'normal');
+                      doc.text('Aircraft Maintenance Management System', 45, 30);
+                      
+                      // Simple separator line
+                      doc.setDrawColor(0, 0, 0);
+                      doc.setLineWidth(0.5);
+                      doc.line(20, 38, 190, 38);
+                      
+                      // Quote title
+                      doc.setFontSize(14);
+                      doc.setTextColor(0, 0, 0);
+                      doc.setFont('helvetica', 'bold');
+                      doc.text('QUOTATION', 20, 50);
+                      
+                      // Quote details (compact)
+                      let yPos = 60;
+                      doc.setFontSize(9);
+                      doc.setTextColor(0, 0, 0);
+                      doc.setFont('helvetica', 'normal');
+                      doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, yPos);
+                      doc.text(`Quote ID: AMM-${Date.now().toString().slice(-6)}`, 100, yPos);
+                      
+                      yPos += 8;
+                      const validDate = new Date();
+                      validDate.setDate(validDate.getDate() + 30);
+                      doc.text(`Valid Until: ${validDate.toLocaleDateString()}`, 20, yPos);
+                      doc.text(`Aircraft Count: ${aircraftCount}`, 100, yPos);
+                      
+                      // Pricing table (minimal)
+                      yPos += 20;
+                      doc.setFontSize(12);
+                      doc.setFont('helvetica', 'bold');
+                      doc.text('Pricing', 20, yPos);
+                      
+                      yPos += 10;
+                      // Table headers
+                      doc.setFontSize(9);
+                      doc.setFont('helvetica', 'bold');
+                      doc.text('Service', 20, yPos);
+                      doc.text('Unit Price', 120, yPos);
+                      doc.text('Total', 160, yPos);
+                      
+                      // Line under headers
+                      doc.setLineWidth(0.3);
+                      doc.line(20, yPos + 2, 190, yPos + 2);
+                      
+                      yPos += 8;
+                      
+                      // Base price row
+                      doc.setFont('helvetica', 'normal');
+                      doc.text('Base Maintenance System', 20, yPos);
+                      doc.text(`$${currentBasePricePerAircraft.toLocaleString()}`, 120, yPos);
+                      doc.text(`$${(currentBasePricePerAircraft * aircraftCount).toLocaleString()}`, 160, yPos);
+                      yPos += 6;
+                      
+                      // Selected modules pricing (compact)
+                      Object.entries(selectedModules).forEach(([key, value]) => {
+                        if (value && key !== 'basicMaintenance') {
+                          const moduleName = dynamicModuleLabels[key] || key;
+                          const modulePrice = currentModulePrices[key] || 0;
+                          doc.text(moduleName, 20, yPos);
+                          doc.text(`$${modulePrice.toLocaleString()}`, 120, yPos);
+                          doc.text(`$${(modulePrice * aircraftCount).toLocaleString()}`, 160, yPos);
+                          yPos += 6;
+                        }
+                      });
+                      
+                      // Subtotal and discount calculation
+                      const subtotal = calculateTotalPrice();
+                      const discountAmount = getDiscountAmount();
+                      const finalTotal = calculateDiscountedPrice();
+                      
+                      // Subtotal line
+                      yPos += 5;
+                      doc.setLineWidth(0.3);
+                      doc.line(120, yPos - 2, 190, yPos - 2);
+                      
+                      doc.setFontSize(10);
+                      doc.setFont('helvetica', 'normal');
+                      doc.text(`Subtotal: $${subtotal.toLocaleString()}`, 120, yPos + 5);
+                      
+                      // Show discount if applied
+                      if (appliedDiscount && discountAmount > 0) {
+                        yPos += 12; // Increased spacing
+                        doc.setTextColor(220, 38, 127); // Pink color for discount
+                        doc.text(`Discount (${appliedDiscount.code}): -$${discountAmount.toLocaleString()}`, 120, yPos);
+                        doc.setTextColor(0, 0, 0); // Reset to black
+                      }
+                      
+                      // Final total line
+                      yPos += 8;
+                      doc.setLineWidth(0.5);
+                      doc.line(120, yPos - 2, 190, yPos - 2);
+                      
+                      doc.setFontSize(11);
+                      doc.setFont('helvetica', 'bold');
+                      doc.text(`Total Monthly: $${finalTotal.toLocaleString()}`, 120, yPos + 5);
+                      
+                      doc.setFontSize(8);
+                      doc.setFont('helvetica', 'normal');
+                      doc.text(`($${(finalTotal / aircraftCount).toFixed(0)} per aircraft/month)`, 120, yPos + 12);
+                      
+                      // Terms & Conditions (two lines)
+                        yPos += 15;
+                        doc.setFontSize(10);
+                        doc.setFont('helvetica', 'bold');
+                        doc.text('Terms & Conditions', 20, yPos);
+                        
+                        yPos += 8;
+                        doc.setFontSize(8);
+                        doc.setFont('helvetica', 'normal');
+                        doc.text('Includes 7-day free trial, monthly billing with 30-day payment terms, 24/7 support, no setup fees.', 20, yPos);
+                        yPos += 5;
+                        doc.text('Implementation: 2-4 weeks, quote valid 30 days.', 20, yPos);
+                       
+                       // Footer
+                       yPos += 15;
+                       doc.setLineWidth(0.3);
+                       doc.line(20, yPos, 190, yPos);
+                       
+                       yPos += 8;
+                       doc.setFontSize(8);
+                       doc.setFont('helvetica', 'normal');
+                       doc.text('Contact: sales@ammstro.com | www.ammstro.com', 20, yPos);
+                      
+                      // Save the PDF
+                      doc.save(`AMMSTRO-Quote-${Date.now()}.pdf`);
+                      
+                      // Close modal after download
+                      setShowQuoteModal(false);
+                    };
+                    
+                    // Fallback if logo fails to load
+                    logoImg.onerror = () => {
+                      console.warn('Logo failed to load, generating PDF without logo');
+                      
+                      // Generate complete PDF without logo
+                      doc.setFontSize(18);
+                      doc.setTextColor(0, 0, 0);
+                      doc.setFont('helvetica', 'bold');
+                      doc.text('AMMSTRO', 20, 25);
+                      
+                      doc.setFontSize(10);
+                      doc.setTextColor(100, 100, 100);
+                      doc.setFont('helvetica', 'normal');
+                      doc.text('Aircraft Maintenance Management System', 20, 30);
+                      
+                      // Simple separator line
+                      doc.setDrawColor(0, 0, 0);
+                      doc.setLineWidth(0.5);
+                      doc.line(20, 38, 190, 38);
+                      
+                      // Quote title
+                      doc.setFontSize(14);
+                      doc.setTextColor(0, 0, 0);
+                      doc.setFont('helvetica', 'bold');
+                      doc.text('QUOTATION', 20, 50);
+                      
+                      // Quote details (compact)
+                      let yPos = 60;
+                      doc.setFontSize(9);
+                      doc.setTextColor(0, 0, 0);
+                      doc.setFont('helvetica', 'normal');
+                      doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, yPos);
+                      doc.text(`Quote ID: AMM-${Date.now().toString().slice(-6)}`, 100, yPos);
+                      
+                      yPos += 8;
+                      const validDate = new Date();
+                      validDate.setDate(validDate.getDate() + 30);
+                      doc.text(`Valid Until: ${validDate.toLocaleDateString()}`, 20, yPos);
+                      doc.text(`Aircraft Count: ${aircraftCount}`, 100, yPos);
+                      
+                      // Pricing table (minimal)
+                      yPos += 20;
+                      doc.setFontSize(12);
+                      doc.setFont('helvetica', 'bold');
+                      doc.text('Pricing', 20, yPos);
+                      
+                      yPos += 10;
+                      // Table headers
+                      doc.setFontSize(9);
+                      doc.setFont('helvetica', 'bold');
+                      doc.text('Service', 20, yPos);
+                      doc.text('Unit Price', 120, yPos);
+                      doc.text('Total', 160, yPos);
+                      
+                      yPos += 8;
+                      doc.setFont('helvetica', 'normal');
+                      
+                      // Base maintenance (always included)
+                      doc.text('Base Maintenance & Scheduling', 20, yPos);
+                      doc.text(`$${currentBasePricePerAircraft.toLocaleString()}`, 120, yPos);
+                      doc.text(`$${(currentBasePricePerAircraft * aircraftCount).toLocaleString()}`, 160, yPos);
+                      yPos += 6;
+                      
+                      // Selected modules
+                      Object.entries(selectedModules).forEach(([key, value]) => {
+                        if (value && key !== 'basicMaintenance') {
+                          const moduleName = dynamicModuleLabels[key] || key;
+                          const modulePrice = currentModulePrices[key] || 0;
+                          doc.text(moduleName, 20, yPos);
+                          doc.text(`$${modulePrice.toLocaleString()}`, 120, yPos);
+                          doc.text(`$${(modulePrice * aircraftCount).toLocaleString()}`, 160, yPos);
+                          yPos += 6;
+                        }
+                      });
+                      
+                      // Subtotal and discount calculation
+                      const subtotal = calculateTotalPrice();
+                      const discountAmount = getDiscountAmount();
+                      const finalTotal = calculateDiscountedPrice();
+                      
+                      // Subtotal line
+                      yPos += 5;
+                      doc.setLineWidth(0.3);
+                      doc.line(120, yPos - 2, 190, yPos - 2);
+                      
+                      doc.setFontSize(10);
+                      doc.setFont('helvetica', 'normal');
+                      doc.text(`Subtotal: $${subtotal.toLocaleString()}`, 120, yPos + 5);
+                      
+                      // Show discount if applied
+                       if (appliedDiscount && discountAmount > 0) {
+                         yPos += 12; // Increased spacing
+                         doc.setTextColor(220, 38, 127); // Pink color for discount
+                         doc.text(`Discount (${appliedDiscount.code}): -$${discountAmount.toLocaleString()}`, 120, yPos);
+                         doc.setTextColor(0, 0, 0); // Reset to black
+                       }
+                      
+                      // Final total line
+                      yPos += 8;
+                      doc.setLineWidth(0.5);
+                      doc.line(120, yPos - 2, 190, yPos - 2);
+                      
+                      doc.setFontSize(11);
+                      doc.setFont('helvetica', 'bold');
+                      doc.text(`Total Monthly: $${finalTotal.toLocaleString()}`, 120, yPos + 5);
+                      
+                      doc.setFontSize(8);
+                      doc.setFont('helvetica', 'normal');
+                      doc.text(`($${(finalTotal / aircraftCount).toFixed(0)} per aircraft/month)`, 120, yPos + 12);
+                      
+                      // Terms & Conditions
+                      yPos += 15;
+                      doc.setFontSize(10);
+                      doc.setFont('helvetica', 'bold');
+                      doc.text('Terms & Conditions', 20, yPos);
+                      
+                      yPos += 8;
+                      doc.setFontSize(8);
+                      doc.setFont('helvetica', 'normal');
+                      doc.text('Includes 7-day free trial, monthly billing with 30-day payment terms, 24/7 support, no setup fees.', 20, yPos);
+                      yPos += 5;
+                      doc.text('Implementation: 2-4 weeks, quote valid 30 days.', 20, yPos);
+                     
+                     // Footer
+                     yPos += 15;
+                     doc.setLineWidth(0.3);
+                     doc.line(20, yPos, 190, yPos);
+                     
+                     yPos += 8;
+                     doc.setFontSize(8);
+                     doc.setFont('helvetica', 'normal');
+                     doc.text('Contact: sales@ammstro.com | www.ammstro.com', 20, yPos);
+                      
+                      doc.save(`AMMSTRO-Quote-${Date.now()}.pdf`);
+                      setShowQuoteModal(false);
+                    };
+                    
+                  } catch (error) {
+                    console.error('Error generating PDF:', error);
+                    alert('Error generating PDF. Please try again.');
+                  }
+                }}
+              >
+                Download PDF
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </motion.div>
+  )
+}
 
 function App() {
   const [activeSection, setActiveSection] = useState('hero')
@@ -190,7 +2108,7 @@ function App() {
             </div>
 
             <nav className="hidden md:flex items-center space-x-8">
-              {['Home', 'Product', 'How it Works', 'Features', 'Company', 'FAQ'].map((item, index) => {
+              {['Home', 'Product', 'How it Works', 'Features', 'Pricing', 'Company', 'FAQ'].map((item, index) => {
                 const sectionId = item === 'Home' ? 'hero' : item.toLowerCase().replace(/\s+/g, '-')
                 return (
                   <a
@@ -1301,6 +3219,74 @@ function App() {
         </div>
       </section>
 
+      {/* Pricing Section */}
+      <section id="pricing" className="py-20 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+          >
+            <Badge className="mb-4 bg-orange-500/20 text-orange-500 border-orange-500/30">Dynamic Pricing Calculator</Badge>
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              Calculate your custom
+              <br />
+              <span className="bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+                aviation maintenance plan
+              </span>
+            </h2>
+            <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+              Customize your plan based on fleet size and required modules. Get real-time pricing updates as you adjust your configuration.
+            </p>
+          </motion.div>
+
+          {/* Dynamic Pricing Calculator */}
+          <PricingCalculator />
+
+          {/* Additional Info */}
+          <motion.div
+            className="mt-16 text-center"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            viewport={{ once: true }}
+          >
+            <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-8 max-w-4xl mx-auto">
+              <h3 className="text-2xl font-bold text-slate-800 mb-4">All Plans Include</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+                <div className="flex items-start">
+                  <Shield className="w-6 h-6 text-green-500 mr-3 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-slate-800 mb-1">Security & Compliance</h4>
+                    <p className="text-slate-600 text-sm">SOC 2, ISO 27001 certified with aviation regulatory compliance</p>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <Globe className="w-6 h-6 text-blue-500 mr-3 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-slate-800 mb-1">Global Access</h4>
+                    <p className="text-slate-600 text-sm">Access your data anywhere with 99.9% uptime guarantee</p>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <Users className="w-6 h-6 text-orange-500 mr-3 mt-1 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-slate-800 mb-1">Team Collaboration</h4>
+                    <p className="text-slate-600 text-sm">Unlimited users with role-based access controls</p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-8 pt-6 border-t border-slate-200">
+                <p className="text-slate-600 text-sm">
+                  <strong>30-day free trial</strong> • No setup fees • Cancel anytime • Migration assistance included
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
 
       {/* FAQ Section */}
       <section id="faq" className="py-20">
