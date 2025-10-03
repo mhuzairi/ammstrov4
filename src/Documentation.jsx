@@ -632,7 +632,7 @@ function Documentation() {
                 <li><a href="/" className="text-slate-400 hover:text-white">Home</a></li>
                 <li><a href="/#company" className="text-slate-400 hover:text-white">About</a></li>
                 <li><a href="#" className="text-slate-400 hover:text-white">Careers</a></li>
-                <li><a href="#" className="text-slate-400 hover:text-white">Contact</a></li>
+                <li><a href="mailto:business@ammstro.com?subject=Contact Inquiry" className="text-slate-400 hover:text-white">Contact</a></li>
               </ul>
             </div>
           </div>

@@ -1114,7 +1114,11 @@ function PricingCalculator() {
             <Button className="w-full bg-white text-orange-500 hover:bg-slate-100 font-semibold">
               Start 7-Day Free Trial
             </Button>
-            <Button variant="outline" className="w-full border-white text-white hover:bg-white/10">
+            <Button 
+              variant="outline" 
+              className="w-full border-white text-white hover:bg-white/10"
+              onClick={() => window.location.href = 'mailto:business@ammstro.com?subject=Sales Inquiry'}
+            >
               Contact Sales Team
             </Button>
             <button 
@@ -3514,7 +3518,7 @@ function App() {
                 <div className="mt-auto">
                   <Button 
                     className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 w-full"
-                    onClick={() => window.open('mailto:sales@ammstro.com?subject=Pricing Inquiry&body=Hello, I would like to learn more about AMMSTRO pricing for my aviation maintenance needs.', '_blank')}
+                    onClick={() => window.open('mailto:business@ammstro.com?subject=Pricing Inquiry&body=Hello, I would like to learn more about AMMSTRO pricing for my aviation maintenance needs.', '_blank')}
                   >
                     <Mail className="w-4 h-4 mr-2" />
                     Email Sales Team
@@ -3712,6 +3716,11 @@ function App() {
                   50480 Kuala Lumpur<br />
                   Malaysia
                 </address>
+                <div className="mt-3">
+                  <a href="mailto:business@ammstro.com" className="text-orange-400 hover:text-orange-300 text-sm">
+                    business@ammstro.com
+                  </a>
+                </div>
               </div>
               
               <div className="flex space-x-4">
@@ -3756,7 +3765,7 @@ function App() {
                 <li><a href="#" className="text-slate-400 hover:text-white">Careers</a></li>
                 <li><a href="#" className="text-slate-400 hover:text-white">Press</a></li>
                 <li><a href="#" className="text-slate-400 hover:text-white">Partners</a></li>
-                <li><a href="#" className="text-slate-400 hover:text-white">Contact</a></li>
+                <li><a href="mailto:business@ammstro.com?subject=Contact Inquiry" className="text-slate-400 hover:text-white">Contact</a></li>
               </ul>
             </div>
             
