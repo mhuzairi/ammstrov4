@@ -2259,14 +2259,14 @@ function App() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between py-4">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 cursor-pointer" onClick={() => document.getElementById('hero')?.scrollIntoView({ behavior: 'smooth' })}>
               <img src={ammstroLogo} alt="AMMSTRO Logo" className="w-8 h-8" />
               <span className="text-xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">AMMSTRO</span>
             </div>
 
             <nav className="hidden md:flex items-center space-x-8">
-              {['Home', 'Product', 'How it Works', 'Features', 'Pricing', 'Company', 'FAQ'].map((item, index) => {
-                const sectionId = item === 'Home' ? 'hero' : item.toLowerCase().replace(/\s+/g, '-')
+              {['Product', 'How it Works', 'Features', 'Pricing', 'Company', 'FAQ'].map((item, index) => {
+                const sectionId = item.toLowerCase().replace(/\s+/g, '-')
                 
                 if (item === 'Pricing') {
                   return (
@@ -3679,10 +3679,17 @@ function App() {
               improve efficiency, and enhance safety.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button className="bg-white text-sky-700 hover:bg-sky-50 px-8 py-6 text-lg">
+              <Button 
+                className="bg-white text-sky-700 hover:bg-sky-50 px-8 py-6 text-lg"
+                onClick={() => setIsGetStartedModalOpen(true)}
+              >
                 Start Free Trial
               </Button>
-              <Button variant="outline" className="border-white text-white hover:bg-sky-700/30 px-8 py-6 text-lg">
+              <Button 
+                variant="outline" 
+                className="border-white text-white hover:bg-sky-700/30 px-8 py-6 text-lg"
+                onClick={() => setIsGetStartedModalOpen(true)}
+              >
                 Schedule Demo
               </Button>
             </div>
