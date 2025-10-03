@@ -3361,47 +3361,7 @@ function App() {
             </div>
           </motion.div>
 
-          {/* Company Achievements */}
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-4 gap-8"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            viewport={{ once: true }}
-          >
-            {[
-              {
-                metric: "$2.7M",
-                label: "Revenue by Year 3",
-                icon: TrendingUp,
-                color: "text-green-500"
-              },
-              {
-                metric: "68%",
-                label: "Gross Margin",
-                icon: BarChart3,
-                color: "text-blue-500"
-              },
-              {
-                metric: "18",
-                label: "Months to Break-Even",
-                icon: Clock,
-                color: "text-purple-500"
-              },
-              {
-                metric: "92%",
-                label: "Customer Retention",
-                icon: Award,
-                color: "text-orange-500"
-              }
-            ].map((stat, index) => (
-              <Card key={index} className="text-center p-6 bg-white border-slate-200 shadow-lg hover:shadow-xl transition-shadow">
-                <stat.icon className={`w-12 h-12 ${stat.color} mx-auto mb-4`} />
-                <div className="text-3xl font-bold text-slate-800 mb-2">{stat.metric}</div>
-                <div className="text-slate-600">{stat.label}</div>
-              </Card>
-            ))}
-          </motion.div>
+
         </div>
       </section>
 
