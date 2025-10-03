@@ -28,6 +28,8 @@ import {
   X,
   Edit,
   Plus,
+  Mail,
+  Phone,
 } from 'lucide-react'
 import ammstroLogo from '/assets/ammstro-logo.png'
 import './App.css'
@@ -2065,6 +2067,12 @@ function App() {
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
   const [isGetStartedModalOpen, setIsGetStartedModalOpen] = useState(false)
   
+  // Access code state for pricing section
+  const [isPricingAccessGranted, setIsPricingAccessGranted] = useState(false)
+  const [isAccessCodeModalOpen, setIsAccessCodeModalOpen] = useState(false)
+  const [accessCodeInput, setAccessCodeInput] = useState('')
+  const [accessCodeError, setAccessCodeError] = useState('')
+  
   // Array of rotating announcements
   const announcements = [
     "✈️ Latest project bulletin: AI-powered predictive maintenance system deployed",
@@ -2171,6 +2179,39 @@ function App() {
     }
   }
 
+  // Access code handling functions
+  const handlePricingClick = (e) => {
+    e.preventDefault()
+    if (!isPricingAccessGranted) {
+      setIsAccessCodeModalOpen(true)
+      setAccessCodeInput('')
+      setAccessCodeError('')
+    } else {
+      // Scroll to pricing section if access is granted
+      document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
+
+  const handleAccessCodeSubmit = () => {
+    if (accessCodeInput === '007') {
+      setIsPricingAccessGranted(true)
+      setIsAccessCodeModalOpen(false)
+      setAccessCodeError('')
+      // Scroll to pricing section after successful authentication
+      setTimeout(() => {
+        document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })
+      }, 100)
+    } else {
+      setAccessCodeError('Invalid access code. Please try again.')
+    }
+  }
+
+  const handleAccessCodeKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleAccessCodeSubmit()
+    }
+  }
+
   useEffect(() => {
     const handleScroll = () => {
       const sections = ['hero', 'product', 'how-it-works', 'features', 'pricing', 'faq']
@@ -2222,6 +2263,21 @@ function App() {
             <nav className="hidden md:flex items-center space-x-8">
               {['Home', 'Product', 'How it Works', 'Features', 'Pricing', 'Company', 'FAQ'].map((item, index) => {
                 const sectionId = item === 'Home' ? 'hero' : item.toLowerCase().replace(/\s+/g, '-')
+                
+                if (item === 'Pricing') {
+                  return (
+                    <button
+                      key={index}
+                      onClick={handlePricingClick}
+                      className={`text-sm font-medium transition-colors hover:text-orange-500 ${
+                        activeSection === sectionId ? 'text-orange-500' : 'text-slate-600'
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  )
+                }
+                
                 return (
                   <a
                     key={index}
@@ -2258,8 +2314,26 @@ function App() {
           {mobileMenuOpen && (
             <div className="md:hidden py-4 border-t border-slate-200">
               <nav className="flex flex-col space-y-4">
-                {['Home', 'Product', 'How it Works', 'Features', 'Company', 'FAQ'].map((item, index) => {
+                {['Home', 'Product', 'How it Works', 'Features', 'Pricing', 'Company', 'FAQ'].map((item, index) => {
                   const sectionId = item === 'Home' ? 'hero' : item.toLowerCase().replace(/\s+/g, '-')
+                  
+                  if (item === 'Pricing') {
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          setMobileMenuOpen(false)
+                          handlePricingClick({ preventDefault: () => {} })
+                        }}
+                        className={`text-sm font-medium transition-colors hover:text-orange-500 text-left ${
+                          activeSection === sectionId ? 'text-orange-500' : 'text-slate-600'
+                        }`}
+                      >
+                        {item}
+                      </button>
+                    )
+                  }
+                  
                   return (
                     <a
                       key={index}
@@ -3332,73 +3406,224 @@ function App() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-20 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-6">
-          <motion.div
-            className="text-center mb-16"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <Badge className="mb-4 bg-orange-500/20 text-orange-500 border-orange-500/30">Dynamic Pricing Calculator</Badge>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              Calculate your custom
-              <br />
-              <span className="bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
-                aviation maintenance plan
-              </span>
-            </h2>
-            <p className="text-xl text-slate-600 max-w-3xl mx-auto">
-              Customize your plan based on fleet size and required modules. Get real-time pricing updates as you adjust your configuration.
-            </p>
-          </motion.div>
+      {isPricingAccessGranted ? (
+        <section id="pricing" className="py-20 bg-slate-50">
+          <div className="max-w-7xl mx-auto px-6">
+            <motion.div
+              className="text-center mb-16"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <Badge className="mb-4 bg-orange-500/20 text-orange-500 border-orange-500/30">Dynamic Pricing Calculator</Badge>
+              <h2 className="text-4xl md:text-5xl font-bold mb-6">
+                Calculate your custom
+                <br />
+                <span className="bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+                  aviation maintenance plan
+                </span>
+              </h2>
+              <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+                Customize your plan based on fleet size and required modules. Get real-time pricing updates as you adjust your configuration.
+              </p>
+            </motion.div>
 
-          {/* Dynamic Pricing Calculator */}
-          <PricingCalculator />
+            {/* Dynamic Pricing Calculator */}
+            <PricingCalculator />
 
-          {/* Additional Info */}
-          <motion.div
-            className="mt-16 text-center"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            viewport={{ once: true }}
-          >
-            <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-8 max-w-4xl mx-auto">
-              <h3 className="text-2xl font-bold text-slate-800 mb-4">All Plans Include</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-                <div className="flex items-start">
-                  <Shield className="w-6 h-6 text-green-500 mr-3 mt-1 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-semibold text-slate-800 mb-1">Security & Compliance</h4>
-                    <p className="text-slate-600 text-sm">SOC 2, ISO 27001 certified with aviation regulatory compliance</p>
+            {/* Additional Info */}
+            <motion.div
+              className="mt-16 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              viewport={{ once: true }}
+            >
+              <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-8 max-w-4xl mx-auto">
+                <h3 className="text-2xl font-bold text-slate-800 mb-4">All Plans Include</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+                  <div className="flex items-start">
+                    <Shield className="w-6 h-6 text-green-500 mr-3 mt-1 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-semibold text-slate-800 mb-1">Security & Compliance</h4>
+                      <p className="text-slate-600 text-sm">SOC 2, ISO 27001 certified with aviation regulatory compliance</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <Globe className="w-6 h-6 text-blue-500 mr-3 mt-1 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-semibold text-slate-800 mb-1">Global Access</h4>
+                      <p className="text-slate-600 text-sm">Access your data anywhere with 99.9% uptime guarantee</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <Users className="w-6 h-6 text-orange-500 mr-3 mt-1 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-semibold text-slate-800 mb-1">Team Collaboration</h4>
+                      <p className="text-slate-600 text-sm">Unlimited users with role-based access controls</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-start">
-                  <Globe className="w-6 h-6 text-blue-500 mr-3 mt-1 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-semibold text-slate-800 mb-1">Global Access</h4>
-                    <p className="text-slate-600 text-sm">Access your data anywhere with 99.9% uptime guarantee</p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <Users className="w-6 h-6 text-orange-500 mr-3 mt-1 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-semibold text-slate-800 mb-1">Team Collaboration</h4>
-                    <p className="text-slate-600 text-sm">Unlimited users with role-based access controls</p>
-                  </div>
+                <div className="mt-8 pt-6 border-t border-slate-200">
+                  <p className="text-slate-600 text-sm">
+                    <strong>30-day free trial</strong> • No setup fees • Cancel anytime • Migration assistance included
+                  </p>
                 </div>
               </div>
-              <div className="mt-8 pt-6 border-t border-slate-200">
-                <p className="text-slate-600 text-sm">
-                  <strong>30-day free trial</strong> • No setup fees • Cancel anytime • Migration assistance included
+            </motion.div>
+          </div>
+        </section>
+      ) : (
+        <section id="pricing" className="py-20 bg-slate-50">
+          <div className="max-w-7xl mx-auto px-6">
+            <motion.div
+              className="text-center mb-16"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <Badge className="mb-4 bg-orange-500/20 text-orange-500 border-orange-500/30">Custom Pricing Solutions</Badge>
+              <h2 className="text-4xl md:text-5xl font-bold mb-6">
+                Get a personalized quote for
+                <br />
+                <span className="bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+                  your aviation maintenance needs
+                </span>
+              </h2>
+              <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+                Every aviation operation is unique. Our pricing is tailored to your specific fleet size, operational requirements, and maintenance complexity. Connect with our aviation experts to discover the perfect solution for your organization.
+              </p>
+            </motion.div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-stretch">
+              {/* Left Column - Contact Information */}
+              <motion.div
+                className="bg-white rounded-xl shadow-lg border border-slate-200 p-8 flex flex-col"
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                viewport={{ once: true }}
+              >
+                <h3 className="text-2xl font-bold text-slate-800 mb-6">Why Choose Custom Pricing?</h3>
+                <div className="space-y-4 flex-grow">
+                  <div className="flex items-start">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-4 flex-shrink-0"></div>
+                    <div>
+                      <h4 className="font-semibold text-slate-800 mb-1">Fleet-Specific Configuration</h4>
+                      <p className="text-slate-600 text-sm">Pricing based on your exact aircraft types, quantities, and operational patterns</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-4 flex-shrink-0"></div>
+                    <div>
+                      <h4 className="font-semibold text-slate-800 mb-1">Modular Solutions</h4>
+                      <p className="text-slate-600 text-sm">Pay only for the modules you need - from basic tracking to advanced predictive analytics</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-4 flex-shrink-0"></div>
+                    <div>
+                      <h4 className="font-semibold text-slate-800 mb-1">Volume Discounts</h4>
+                      <p className="text-slate-600 text-sm">Significant savings for larger fleets and multi-year commitments</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-4 flex-shrink-0"></div>
+                    <div>
+                      <h4 className="font-semibold text-slate-800 mb-1">Implementation Support</h4>
+                      <p className="text-slate-600 text-sm">Dedicated onboarding, training, and migration assistance included</p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Right Column - Ready to Get Started */}
+              <motion.div
+                className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl border border-orange-200 p-8 flex flex-col"
+                initial={{ opacity: 0, x: 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                viewport={{ once: true }}
+              >
+                <h3 className="text-xl font-bold text-slate-800 mb-4">Ready to Get Started?</h3>
+                <p className="text-slate-600 mb-6 flex-grow">
+                  Schedule a consultation with our aviation maintenance experts. We'll analyze your current operations and provide a detailed proposal within 24 hours.
                 </p>
-              </div>
+                <div className="mt-auto">
+                  <Button 
+                    className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 w-full"
+                    onClick={() => window.open('mailto:sales@ammstro.com?subject=Pricing Inquiry&body=Hello, I would like to learn more about AMMSTRO pricing for my aviation maintenance needs.', '_blank')}
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    Email Sales Team
+                  </Button>
+                  
+                  {/* Hidden access code trigger */}
+                  <div className="mt-6 text-center">
+                    <button
+                      onClick={() => setIsAccessCodeModalOpen(true)}
+                      className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+                      style={{ opacity: 0.1 }}
+                    >
+                      •
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
             </div>
-          </motion.div>
-        </div>
-      </section>
+
+            {/* Bottom Section - Trust Indicators */}
+            <motion.div
+              className="mt-16 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-8">
+                <h3 className="text-2xl font-bold text-slate-800 mb-6">Trusted by Aviation Leaders Worldwide</h3>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-left">
+                  <div className="flex items-start">
+                    <Shield className="w-6 h-6 text-green-500 mr-3 mt-1 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-semibold text-slate-800 mb-1">Security & Compliance</h4>
+                      <p className="text-slate-600 text-sm">SOC 2, ISO 27001 certified with full aviation regulatory compliance</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <Globe className="w-6 h-6 text-blue-500 mr-3 mt-1 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-semibold text-slate-800 mb-1">Global Availability</h4>
+                      <p className="text-slate-600 text-sm">24/7 access with 99.9% uptime guarantee and worldwide support</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <Users className="w-6 h-6 text-orange-500 mr-3 mt-1 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-semibold text-slate-800 mb-1">Team Collaboration</h4>
+                      <p className="text-slate-600 text-sm">Unlimited users with advanced role-based access controls</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <Clock className="w-6 h-6 text-purple-500 mr-3 mt-1 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-semibold text-slate-800 mb-1">Quick Implementation</h4>
+                      <p className="text-slate-600 text-sm">30-day free trial with full migration assistance and training</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-8 pt-6 border-t border-slate-200">
+                  <p className="text-slate-600 text-sm">
+                    <strong>Risk-free evaluation</strong> • No setup fees • Cancel anytime • Dedicated customer success manager
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+      )}
 
       {/* FAQ Section */}
       <section id="faq" className="py-20">
@@ -3516,6 +3741,19 @@ function App() {
               <p className="text-slate-400 mb-4">
                 AI-powered aviation maintenance solutions for the modern fleet.
               </p>
+              
+              {/* Company Address */}
+              <div className="mb-4">
+                <h4 className="text-white font-semibold mb-2">Our Office</h4>
+                <address className="text-slate-400 text-sm not-italic leading-relaxed">
+                  Level 23, Premier Suite<br />
+                  One Mont Kiara No 1<br />
+                  Jalan Kiara, Mont Kiara<br />
+                  50480 Kuala Lumpur<br />
+                  Malaysia
+                </address>
+              </div>
+              
               <div className="flex space-x-4">
                 <a href="#" className="text-slate-400 hover:text-white">
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -3590,6 +3828,73 @@ function App() {
           </div>
         </div>
       </footer>
+
+      {/* Access Code Modal */}
+      {isAccessCodeModalOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+          onClick={() => setIsAccessCodeModalOpen(false)}
+        >
+          <motion.div
+            className="relative w-full max-w-md mx-4 bg-white rounded-lg overflow-hidden shadow-2xl"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.3 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setIsAccessCodeModalOpen(false)}
+              className="absolute top-4 right-4 z-10 text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            
+            {/* Modal Content */}
+            <div className="p-8">
+              <div className="text-center mb-6">
+                <div className="text-4xl mb-4">🔐</div>
+                <h3 className="text-2xl font-bold text-slate-800 mb-2">Enter Access Code</h3>
+                <p className="text-slate-600">Please enter the access code to view pricing information.</p>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <input
+                    type="password"
+                    value={accessCodeInput}
+                    onChange={(e) => setAccessCodeInput(e.target.value)}
+                    onKeyPress={handleAccessCodeKeyPress}
+                    placeholder="Enter access code"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-colors"
+                    autoFocus
+                  />
+                  {accessCodeError && (
+                    <p className="text-red-500 text-sm mt-2">{accessCodeError}</p>
+                  )}
+                </div>
+                
+                <div className="flex space-x-3">
+                  <Button
+                    onClick={() => setIsAccessCodeModalOpen(false)}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleAccessCodeSubmit}
+                    className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                  >
+                    Submit
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Video Modal */}
       {isVideoModalOpen && (
