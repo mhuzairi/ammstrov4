@@ -6,6 +6,7 @@ import App from './App.jsx'
 import Documentation from './Documentation.jsx'
 import Repository from './Repository.jsx'
 import Login from './Login.jsx'
+import Blog from './Blog.jsx'
 
 const router = createBrowserRouter([
   {
@@ -23,6 +24,10 @@ const router = createBrowserRouter([
   {
     path: "/login",
     element: <Login />,
+  },
+  {
+    path: "/blog",
+    element: <Blog />,
   },
 ])
 

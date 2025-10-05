@@ -3779,7 +3779,7 @@ function App() {
             <div>
               <h3 className="text-white font-bold mb-4">Resources</h3>
               <ul className="space-y-2">
-                <li><a href="#" className="text-slate-400 hover:text-white">Blog</a></li>
+                <li><a href="/blog" className="text-slate-400 hover:text-white">Blog</a></li>
                 <li><a href="/documentation" className="text-slate-400 hover:text-white">Documentation</a></li>
                 <li><a href="#" className="text-slate-400 hover:text-white">Community</a></li>
                 <li><a href="#" className="text-slate-400 hover:text-white">Webinars</a></li>
