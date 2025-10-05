@@ -32,7 +32,7 @@ const Blog = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="min-h-screen bg-white text-slate-900" style={{marginTop: '-10px', paddingTop: '10px'}}>
       {/* Navigation - Same as main page */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-6">
@@ -502,7 +502,6 @@ const Blog = () => {
                   <li><a href="#" className="text-slate-400 hover:text-white">Updates</a></li>
                 </ul>
               </div>
-              
               <div>
                 <h3 className="text-white font-bold mb-4">Company</h3>
                 <ul className="space-y-2">
@@ -513,7 +512,6 @@ const Blog = () => {
                   <li><a href="mailto:business@ammstro.com?subject=Contact Inquiry" className="text-slate-400 hover:text-white">Contact</a></li>
                 </ul>
               </div>
-              
               <div>
                 <h3 className="text-white font-bold mb-4">Resources</h3>
                 <ul className="space-y-2">
