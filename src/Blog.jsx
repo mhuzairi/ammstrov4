@@ -151,10 +151,10 @@ const Blog = () => {
                 Industry Analysis
               </div>
               <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
-                AMMS vs. AMOS: The Next Generation of Aviation Maintenance Management
+                AMMS vs. Top leading digital platform: The Next Generation of Aviation Maintenance Management
               </h1>
               <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-                How AMMS by Ammstro delivers a smarter, faster, and more adaptable alternative to traditional MRO systems through advanced data ingestion, proactive analytics, and intelligent automation.
+                How AMMS by Ammstro delivers a smarter, faster, and more adaptable alternative to traditional CAMO systems through advanced data ingestion, proactive analytics, and intelligent automation.
               </p>
             </div>
             
@@ -180,7 +180,7 @@ const Blog = () => {
             <section className="mb-12">
               <div className="prose prose-lg max-w-none">
                 <p className="text-xl text-gray-700 leading-relaxed mb-8 font-medium">
-                  AMMS by Ammstro offers a next-generation approach to aviation maintenance management, positioning itself as a smarter, faster, and more adaptable alternative to traditional MRO systems like AMOS. Unlike older platforms that rely heavily on clean, pre-structured data and manual processes, AMMS is engineered to thrive in the real-world complexity of aviation operations.
+                  AMMS by Ammstro offers a next-generation approach to aviation maintenance management, positioning itself as a smarter, faster, and more adaptable alternative to traditional CAMO systems like AMOS. Unlike older platforms that rely heavily on clean, pre-structured data and manual processes, AMMS is engineered to thrive in the real-world complexity of aviation operations.
                 </p>
               </div>
             </section>
@@ -209,7 +209,7 @@ const Blog = () => {
                     AI-Powered OCR
                   </h3>
                   <p className="text-gray-700 leading-relaxed">
-                    The built-in <em>OCR Wizard</em> can extract data directly from paper records, technician logs, 8130 forms, and delivery documentation, bridging the gap between physical and digital operations and eliminating manual transcription errors.
+                    The built-in <em>OCR Wizard</em> can extract data directly from dirty finger-print, aircraft journey & deferable defect logs, EASA F1 & 8130 forms, and delivery documentation, bridging the gap between physical and digital operations and eliminating manual transcription errors.
                   </p>
                 </div>
 
@@ -254,7 +254,7 @@ const Blog = () => {
                   Purpose-Built Visualizations
                 </h3>
                 <p className="text-gray-700 leading-relaxed">
-                  Components like the <em>Repeating Defects Card</em> turn maintenance data into instant, visual insights. Engineers can identify defect trends at a glance, enabling proactive maintenance decisions without running complex reports.
+                  Key components like the <em>Repeating task withdrawal</em> turn collective data into instant data analysis, pattern recognition and continuous refinement. Planning can identify discrepancies trends at a glance, enabling proactive maintenance decisions without running complex reports.
                 </p>
               </div>
 
@@ -333,7 +333,7 @@ const Blog = () => {
                         AMMS by Ammstro
                       </th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600 border-b border-gray-200">
-                        AMOS (Swiss-AS)
+                        AxxS (Swiss-AS)
                       </th>
                     </tr>
                   </thead>
@@ -355,7 +355,7 @@ const Blog = () => {
                     </tr>
                     <tr className="hover:bg-gray-50">
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">Analytics & Visualization</td>
-                      <td className="px-6 py-4 text-sm text-gray-700">Proactive, dashboard-first analytics (e.g., Repeating Defects Card) for at-a-glance trends</td>
+                      <td className="px-6 py-4 text-sm text-gray-700">Proactive, dashboard-first analytics (e.g., Repeating task withdrawal) for at-a-glance trends</td>
                       <td className="px-6 py-4 text-sm text-gray-700">Strong business intelligence modules, customizable dashboards, but often reactive; user must query for insights</td>
                     </tr>
                     <tr className="hover:bg-gray-50">
@@ -381,7 +381,7 @@ const Blog = () => {
                     <tr className="hover:bg-gray-50">
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">Target User</td>
                       <td className="px-6 py-4 text-sm text-gray-700">Operators needing agility with complex, changing data and high automation</td>
-                      <td className="px-6 py-4 text-sm text-gray-700">Airlines, MROs, and CAMOs of all sizes prioritizing depth and regulatory compliance</td>
+                      <td className="px-6 py-4 text-sm text-gray-700">Airlines and CAMOs of all sizes prioritizing depth and regulatory compliance</td>
                     </tr>
                     <tr className="hover:bg-gray-50">
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">Innovation Focus</td>

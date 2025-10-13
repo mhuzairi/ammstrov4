@@ -3247,33 +3247,33 @@ function App() {
             {[
               {
                 icon: <BarChart3 className="w-6 h-6" />,
-                title: "Real-time data processing",
-                description: "Handle and analyze maintenance data instantly, providing actionable insights without delays."
+                title: "CAMO Digital Transformation",
+                description: "Advanced CAM software with machine learning & AI for comprehensive digital transformation of your maintenance operations."
               },
               {
                 icon: <Zap className="w-6 h-6" />,
-                title: "Smart automation",
-                description: "Automate repetitive maintenance tasks, freeing up time and boosting productivity across your team."
-              },
-              {
-                icon: <MessageSquare className="w-6 h-6" />,
-                title: "Natural language understanding",
-                description: "Understands and responds to maintenance queries in human language, making interactions intuitive."
+                title: "Aircraft Transition and Data Migration",
+                description: "Seamless migration from nil to new software or from existing software to other platforms with complete data integrity."
               },
               {
                 icon: <TrendingUp className="w-6 h-6" />,
-                title: "Predictive analytics",
-                description: "Anticipate maintenance needs with AI models, helping you make informed decisions before issues arise."
-              },
-              {
-                icon: <Smartphone className="w-6 h-6" />,
-                title: "Multi-platform integration",
-                description: "Connect with existing aviation tools, ensuring smooth workflows and collaboration across systems."
+                title: "Data Management and Reporting",
+                description: "Advanced data collection & storage, machine learning analytics, reliability reports and prevention implementation."
               },
               {
                 icon: <Shield className="w-6 h-6" />,
-                title: "Continuous learning",
-                description: "Our AI evolves with every maintenance interaction, becoming smarter and more accurate over time."
+                title: "IT Infrastructure Upgrade",
+                description: "Complete modernization of your IT infrastructure to support advanced aviation maintenance operations."
+              },
+              {
+                icon: <Smartphone className="w-6 h-6" />,
+                title: "Cloud Services",
+                description: "Scalable cloud-based solutions ensuring accessibility, security, and real-time collaboration across your organization."
+              },
+              {
+                icon: <MessageSquare className="w-6 h-6" />,
+                title: "Aircraft Technical Consultancy",
+                description: "Expert technical consulting services to optimize your aircraft maintenance processes and regulatory compliance."
               }
             ].map((feature, index) => (
               <motion.div
@@ -3297,6 +3297,65 @@ function App() {
               </motion.div>
             ))}
           </div>
+          
+          {/* Coming Soon Section */}
+          <motion.div
+            className="mt-20 text-center"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+          >
+            <Badge className="mb-4 bg-orange-500/20 text-orange-500 border-orange-500/30">Coming Soon</Badge>
+            <h3 className="text-3xl md:text-4xl font-bold mb-6">
+              <span className="bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+                Upcoming Modules
+              </span>
+            </h3>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto mb-12">
+              Exciting new modules in development to further enhance your aviation maintenance ecosystem.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              {[
+                {
+                  icon: <Shield className="w-6 h-6" />,
+                  title: "MRO P-145 Modules",
+                  description: "Comprehensive Maintenance, Repair, and Overhaul modules compliant with Part-145 regulations."
+                },
+                {
+                  icon: <TrendingUp className="w-6 h-6" />,
+                  title: "Supply Chain Modules",
+                  description: "Advanced supply chain management for parts procurement, inventory control, and logistics optimization."
+                },
+                {
+                  icon: <BarChart3 className="w-6 h-6" />,
+                  title: "Complete Aircraft Airworthiness Maintenance Ecosystem",
+                  description: "Integrated CAMO + MRO + Supply Chain modules for a complete maintenance management solution."
+                }
+              ].map((module, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                >
+                  <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-orange-200 p-6 h-full hover:shadow-lg transition-all duration-300">
+                    <CardHeader>
+                      <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center mb-4 text-white">
+                        {module.icon}
+                      </div>
+                      <CardTitle className="text-slate-800">{module.title}</CardTitle>
+                      <CardDescription className="text-slate-600">
+                        {module.description}
+                      </CardDescription>
+                    </CardHeader>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
           
           {/* Helicopter section moved above military section */}
         </div>
