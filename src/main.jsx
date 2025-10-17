@@ -38,7 +38,7 @@ const router = createBrowserRouter([
     path: "/announcements-admin",
     element: <Navigate to="/admin" replace />,
   },
-])
+], { basename: import.meta.env.BASE_URL })
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
