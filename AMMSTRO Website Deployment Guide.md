@@ -442,4 +442,56 @@ After successful deployment, you should have:
 **🚀 Your AMMSTRO website is now ready for professional deployment!**
 
 For additional support or questions, refer to the GitHub Pages documentation or contact your development team.
+# AMMSTRO Website Deployment Guide
+
+## GitHub Pages — Short Deployment Guide
+
+This repo is preconfigured to deploy with GitHub Pages using GitHub Actions. The workflow automatically sets the correct Vite `base` for both root pages and project pages.
+
+### Prerequisites
+- Your repo is on GitHub and you have push access to `main`.
+- The Actions workflow file exists at `.github/workflows/deploy.yml`.
+
+### Deploy Steps
+1. Push your changes to `main`.
+2. In your GitHub repo, open Settings → Pages and set Source to “GitHub Actions”.
+3. Wait for the “Deploy AMMSTRO Website” workflow to complete (Actions tab).
+4. When finished, the job will output the `page_url`. Your site will be available at:
+   - Root pages: `https://<username>.github.io/`
+   - Project pages: `https://<username>.github.io/<repo-name>/`
+
+### How the base path is handled
+- The workflow sets `VITE_BASE` automatically:
+  - If the repository name ends with `.github.io` → `VITE_BASE=/`.
+  - Otherwise → `VITE_BASE=/<repo-name>/`.
+- `vite.config.js` reads `process.env.VITE_BASE` so assets and routes work on Pages.
+
+### Local preview of a Pages build
+Use the same `VITE_BASE` locally to mirror Pages:
+
+```bash
+# For project pages (e.g. https://<username>.github.io/ammstrov4/)
+VITE_BASE=/ammstrov4/ npm run build
+npm run preview
+
+# For root pages (username.github.io)
+VITE_BASE=/ npm run build
+npm run preview
+```
+
+### Troubleshooting
+- Blank page or 404s for CSS/JS:
+  - Confirm Pages Source is set to “GitHub Actions”.
+  - Ensure `VITE_BASE` matches your deployment (project vs root). The workflow does this automatically.
+- Firebase/Firestore errors in console:
+  - Add your Pages domain to Firebase authorized domains.
+  - Confirm Firestore rules allow the reads you expect (in development, consider permissive rules temporarily).
+- Router issues with direct links:
+  - Use `react-router` with client-side routes; Pages serves the built `dist` only. For deep links, ensure your app uses hash-based links or configure redirects if needed.
+
+### Custom domain (optional)
+- If you want `https://example.com` without the repo segment, publish to the special repo `<username>.github.io`, or set your Pages custom domain to point to that repo.
+- For project-pages custom domains (`https://example.com/ammstrov4/`), the dynamic `VITE_BASE` continues to work.
+
+That’s it — push to `main` and Pages will deploy automatically.
 

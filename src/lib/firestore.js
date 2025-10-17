@@ -8,7 +8,11 @@ import {
   deleteDoc, 
   getDocs, 
   onSnapshot,
-  deleteField 
+  deleteField,
+  addDoc,
+  serverTimestamp,
+  query,
+  orderBy
 } from 'firebase/firestore';
 import { db } from './firebase.js';
 
@@ -213,6 +217,75 @@ export const discountCodesService = {
         codes.push({ id: doc.id, ...doc.data() });
       });
       callback(codes);
+    });
+  }
+};
+
+// Announcements (rotating display) Functions
+export const announcementsService = {
+  // Get all announcements
+  async getAnnouncements() {
+    try {
+      const announcementsRef = collection(db, 'announcements');
+      const snap = await getDocs(announcementsRef);
+      const items = [];
+      snap.forEach((d) => {
+        items.push({ id: d.id, ...d.data() });
+      });
+      return items;
+    } catch (error) {
+      console.error('Error getting announcements:', error);
+      throw error;
+    }
+  },
+
+  // Add a new announcement
+  async addAnnouncement(text, position) {
+    try {
+      const announcementsRef = collection(db, 'announcements');
+      await addDoc(announcementsRef, {
+        text,
+        position: typeof position === 'number' ? position : Date.now(),
+        visible: true,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error('Error adding announcement:', error);
+      throw error;
+    }
+  },
+
+  // Update announcement text
+  async updateAnnouncement(id, updates) {
+    try {
+      const announcementRef = doc(db, 'announcements', id);
+      await updateDoc(announcementRef, { ...updates, updatedAt: serverTimestamp() });
+    } catch (error) {
+      console.error('Error updating announcement:', error);
+      throw error;
+    }
+  },
+
+  // Delete announcement
+  async deleteAnnouncement(id) {
+    try {
+      const announcementRef = doc(db, 'announcements', id);
+      await deleteDoc(announcementRef);
+    } catch (error) {
+      console.error('Error deleting announcement:', error);
+      throw error;
+    }
+  },
+
+  // Listen to announcements changes
+  onAnnouncementsChange(callback) {
+    const announcementsRef = collection(db, 'announcements');
+    const q = query(announcementsRef, orderBy('createdAt', 'desc'));
+    return onSnapshot(q, (snapshot) => {
+      const items = [];
+      snapshot.forEach((d) => items.push({ id: d.id, ...d.data() }));
+      callback(items);
     });
   }
 };

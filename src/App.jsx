@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button.jsx'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
 import jsPDF from 'jspdf'
-import { adminSettingsService, discountCodesService } from './lib/firestore'
+import { adminSettingsService, discountCodesService, announcementsService } from './lib/firestore'
+import { DEFAULT_ANNOUNCEMENTS } from './lib/constants.js'
 import { 
   Plane, 
   BarChart3, 
@@ -36,7 +37,10 @@ import './App.css'
 
 // Dynamic Pricing Calculator Component
 function PricingCalculator() {
-  const [aircraftCount, setAircraftCount] = useState(1)
+  const [heavyCount, setHeavyCount] = useState(0)
+  const [lightCount, setLightCount] = useState(1)
+  const aircraftCount = heavyCount + lightCount
+  const [reportPeriod, setReportPeriod] = useState('monthly')
   const [selectedModules, setSelectedModules] = useState({
     basicMaintenance: true,
     predictiveAnalytics: false,
@@ -870,6 +874,11 @@ function PricingCalculator() {
   const discountAmount = getDiscountAmount()
   const selectedModuleCount = Object.values(selectedModules).filter(Boolean).length
 
+  // Reporting helpers
+  const reportMultiplier = reportPeriod === 'monthly' ? 1 : (reportPeriod === 'quarterly' ? 3 : 12)
+  const reportLabel = reportPeriod === 'monthly' ? 'Monthly' : (reportPeriod === 'quarterly' ? 'Quarterly' : 'Yearly')
+  const reportTotal = discountedPrice * reportMultiplier
+
   return (
     <motion.div
       className="max-w-6xl mx-auto"
@@ -892,40 +901,85 @@ function PricingCalculator() {
             </button>
           </div>
           
-          {/* Aircraft Count Selector */}
+          {/* Fleet Composition Selector */}
           <div className="mb-8">
             <label className="block text-sm font-semibold text-slate-700 mb-3">
-              Number of Aircraft
+              Fleet Composition
             </label>
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setAircraftCount(Math.max(1, aircraftCount - 1))}
-                className="w-10 h-10 p-0"
-              >
-                -
-              </Button>
-              <div className="flex-1">
-                <input
-                  type="range"
-                  min="1"
-                  max="100"
-                  value={aircraftCount}
-                  onChange={(e) => setAircraftCount(parseInt(e.target.value))}
-                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer slider"
-                />
+            <div className="space-y-5">
+              {/* Heavy aircraft */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-slate-700">Heavy aircraft</span>
+                  <span className="text-sm text-slate-600">Count: <span className="font-semibold text-orange-600">{heavyCount}</span></span>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setHeavyCount(Math.max(0, heavyCount - 1))}
+                    className="w-10 h-10 p-0"
+                  >
+                    -
+                  </Button>
+                  <div className="flex-1">
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={heavyCount}
+                      onChange={(e) => setHeavyCount(parseInt(e.target.value))}
+                      className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer slider"
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setHeavyCount(Math.min(100, heavyCount + 1))}
+                    className="w-10 h-10 p-0"
+                  >
+                    +
+                  </Button>
+                </div>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setAircraftCount(Math.min(100, aircraftCount + 1))}
-                className="w-10 h-10 p-0"
-              >
-                +
-              </Button>
-              <div className="min-w-[3rem] text-center">
-                <span className="text-2xl font-bold text-orange-500">{aircraftCount}</span>
+              {/* Light aircraft */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-slate-700">Light craft</span>
+                  <span className="text-sm text-slate-600">Count: <span className="font-semibold text-orange-600">{lightCount}</span></span>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setLightCount(Math.max(0, lightCount - 1))}
+                    className="w-10 h-10 p-0"
+                  >
+                    -
+                  </Button>
+                  <div className="flex-1">
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={lightCount}
+                      onChange={(e) => setLightCount(parseInt(e.target.value))}
+                      className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer slider"
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setLightCount(Math.min(100, lightCount + 1))}
+                    className="w-10 h-10 p-0"
+                  >
+                    +
+                  </Button>
+                </div>
+              </div>
+              <div className="flex justify-end text-sm text-slate-600">
+                <span className="mr-2">Total fleet:</span>
+                <span className="font-semibold text-orange-600">{aircraftCount} aircraft</span>
               </div>
             </div>
           </div>
@@ -993,7 +1047,7 @@ function PricingCalculator() {
           <div className="space-y-4 mb-8">
             <div className="pb-4 border-b border-white/20">
               <div className="flex justify-between items-center mb-3">
-                <span>Base Plan ({aircraftCount} aircraft)</span>
+                <span>Base Plan ({aircraftCount} aircraft: {heavyCount} heavy, {lightCount} light)</span>
                 <span className="font-semibold">${currentBasePricePerAircraft * aircraftCount}</span>
               </div>
               <div className="text-xs text-white/80 space-y-1">
@@ -1110,6 +1164,46 @@ function PricingCalculator() {
             )}
           </div>
           
+          {/* Detailed Report */}
+          <div className="bg-white/10 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-semibold">Reporting period</span>
+              <div className="flex space-x-2">
+                <button
+                  className={`px-3 py-1 rounded text-sm ${reportPeriod === 'monthly' ? 'bg-white text-orange-600' : 'bg-white/20 text-white'}`}
+                  onClick={() => setReportPeriod('monthly')}
+                >
+                  Monthly
+                </button>
+                <button
+                  className={`px-3 py-1 rounded text-sm ${reportPeriod === 'quarterly' ? 'bg-white text-orange-600' : 'bg-white/20 text-white'}`}
+                  onClick={() => setReportPeriod('quarterly')}
+                >
+                  Quarterly
+                </button>
+                <button
+                  className={`px-3 py-1 rounded text-sm ${reportPeriod === 'yearly' ? 'bg-white text-orange-600' : 'bg-white/20 text-white'}`}
+                  onClick={() => setReportPeriod('yearly')}
+                >
+                  Yearly
+                </button>
+              </div>
+            </div>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between items-center">
+                <span>{reportLabel} total</span>
+                <span className="font-semibold">${reportTotal.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center text-white/80">
+                <span>{reportLabel} per aircraft</span>
+                <span>${aircraftCount > 0 ? (reportTotal / aircraftCount).toFixed(0) : '0'}</span>
+              </div>
+              <div className="text-xs text-white/60">
+                Fleet: {aircraftCount} aircraft ({heavyCount} heavy, {lightCount} light)
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-3">
             <Button className="w-full bg-white text-orange-500 hover:bg-slate-100 font-semibold">
               Start 7-Day Free Trial
@@ -1659,7 +1753,7 @@ function PricingCalculator() {
                 <div className="bg-slate-50 rounded-lg p-4">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-slate-700">Fleet Size:</span>
-                    <span className="font-semibold">{aircraftCount} aircraft</span>
+                    <span className="font-semibold">{aircraftCount} aircraft ({heavyCount} heavy, {lightCount} light)</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-slate-700">Selected Modules:</span>
@@ -1673,7 +1767,7 @@ function PricingCalculator() {
                 <h5 className="text-lg font-semibold text-slate-800 mb-3">Pricing Breakdown</h5>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center py-2 border-b border-slate-200">
-                    <span className="text-slate-700">Base Plan ({aircraftCount} aircraft)</span>
+                    <span className="text-slate-700">Base Plan ({aircraftCount} aircraft: {heavyCount} heavy, {lightCount} light)</span>
                     <span className="font-semibold">${(currentBasePricePerAircraft * aircraftCount).toLocaleString()}</span>
                   </div>
                   
@@ -1814,6 +1908,11 @@ function PricingCalculator() {
                       doc.text('Pricing', 20, yPos);
                       
                       yPos += 10;
+                      // Fleet composition note
+                      doc.setFontSize(8);
+                      doc.setFont('helvetica', 'normal');
+                      doc.text(`Fleet: ${aircraftCount} aircraft (${heavyCount} heavy, ${lightCount} light)`, 20, yPos);
+                      yPos += 6;
                       // Table headers
                       doc.setFontSize(9);
                       doc.setFont('helvetica', 'bold');
@@ -1958,6 +2057,11 @@ function PricingCalculator() {
                       doc.text('Pricing', 20, yPos);
                       
                       yPos += 10;
+                      // Fleet composition note
+                      doc.setFontSize(8);
+                      doc.setFont('helvetica', 'normal');
+                      doc.text(`Fleet: ${aircraftCount} aircraft (${heavyCount} heavy, ${lightCount} light)`, 20, yPos);
+                      yPos += 6;
                       // Table headers
                       doc.setFontSize(9);
                       doc.setFont('helvetica', 'bold');
@@ -2077,17 +2181,8 @@ function App() {
   const [accessCodeInput, setAccessCodeInput] = useState('')
   const [accessCodeError, setAccessCodeError] = useState('')
   
-  // Array of rotating announcements
-  const announcements = [
-    "✈️ Latest project bulletin: AI-powered predictive maintenance system deployed",
-    "🚁 New helicopter maintenance module launched with 95% accuracy rate",
-    "🛩️ Partnership with major airline for fleet-wide implementation announced",
-    "📊 Cost reduction of 35% achieved across all client operations this quarter",
-    "🔧 Advanced rotor blade inspection technology now available",
-    "🌟 AMMSTRO wins Aviation Innovation Award 2024",
-    "📈 Real-time analytics dashboard upgraded with new features",
-    "🛡️ Enhanced security protocols implemented for military aircraft maintenance"
-  ]
+  // Announcements for rotating display (defaults, will be overridden by Firestore if available)
+  const [announcements, setAnnouncements] = useState(DEFAULT_ANNOUNCEMENTS)
   
   const [chatMessages, setChatMessages] = useState([
     {
@@ -2216,6 +2311,37 @@ function App() {
     }
   }
 
+  // Subscribe to announcements from Firestore (fallback to defaults if empty)
+  useEffect(() => {
+    let unsubscribe
+    try {
+      unsubscribe = announcementsService.onAnnouncementsChange((items) => {
+        if (items && items.length > 0) {
+          // sort by optional position ascending; fallback to createdAt desc
+          const sorted = [...items].sort((a, b) => {
+            const pa = typeof a.position === 'number' ? a.position : Infinity
+            const pb = typeof b.position === 'number' ? b.position : Infinity
+            if (pa !== pb) return pa - pb
+            const ca = a.createdAt?.seconds || 0
+            const cb = b.createdAt?.seconds || 0
+            return cb - ca
+          })
+          const visibleSortedTexts = sorted
+            .filter((a) => a.visible !== false)
+            .map((a) => a.text)
+          setAnnouncements(visibleSortedTexts)
+        } else {
+          setAnnouncements(DEFAULT_ANNOUNCEMENTS)
+        }
+      })
+    } catch (error) {
+      console.error('Error subscribing to announcements:', error)
+    }
+    return () => {
+      if (unsubscribe) unsubscribe()
+    }
+  }, [])
+
   useEffect(() => {
     const handleScroll = () => {
       const sections = ['hero', 'product', 'how-it-works', 'features', 'pricing', 'faq']
@@ -2242,11 +2368,16 @@ function App() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Rotate announcements every 3 seconds
+  // Rotate announcements every 3 seconds (only when there are at least 2)
   useEffect(() => {
+    const len = announcements.length
+    if (len <= 1) {
+      setCurrentAnnouncementIndex(0)
+      return
+    }
     const interval = setInterval(() => {
       setCurrentAnnouncementIndex((prevIndex) => 
-        (prevIndex + 1) % announcements.length
+        (prevIndex + 1) % len
       )
     }, 3000)
 
@@ -2416,7 +2547,7 @@ function App() {
                 >
                   <Badge className="bg-sky-100 text-sky-700 border-sky-300 px-3 py-2 cursor-pointer shadow-sm text-xs sm:text-sm text-center max-w-full break-words leading-relaxed sm:leading-normal min-h-[3rem] sm:min-h-[auto] flex items-center justify-center">
                     <span className="whitespace-normal max-w-[280px] sm:max-w-none">
-                      {announcements[currentAnnouncementIndex]}
+                      {announcements.length ? announcements[currentAnnouncementIndex % announcements.length] : ''}
                     </span>
                   </Badge>
                 </motion.div>

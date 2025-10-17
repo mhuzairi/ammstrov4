@@ -1,12 +1,13 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
 import Documentation from './Documentation.jsx'
 import Repository from './Repository.jsx'
 import Login from './Login.jsx'
 import Blog from './Blog.jsx'
+import AnnouncementsAdmin from './AnnouncementsAdmin.jsx'
 
 const router = createBrowserRouter([
   {
@@ -28,6 +29,14 @@ const router = createBrowserRouter([
   {
     path: "/blog",
     element: <Blog />,
+  },
+  {
+    path: "/admin",
+    element: <AnnouncementsAdmin />,
+  },
+  {
+    path: "/announcements-admin",
+    element: <Navigate to="/admin" replace />,
   },
 ])
 

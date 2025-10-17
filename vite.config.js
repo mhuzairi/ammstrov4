@@ -9,7 +9,8 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  base: '/',
+  // Use dynamic base so GitHub Pages project sites work out-of-the-box
+  base: process.env.VITE_BASE || '/',
   build: {
     outDir: 'dist',
     assetsDir: 'assets',

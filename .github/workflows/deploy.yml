@@ -27,6 +27,15 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
+
+      - name: Determine Vite base path
+        run: |
+          REPO_NAME="${{ github.event.repository.name }}"
+          if [[ "$REPO_NAME" == *.github.io ]]; then
+            echo "VITE_BASE=/" >> $GITHUB_ENV
+          else
+            echo "VITE_BASE=/$REPO_NAME/" >> $GITHUB_ENV
+          fi
           
       - name: Install dependencies
         run: npm ci
