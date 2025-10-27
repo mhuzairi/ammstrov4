@@ -39,7 +39,8 @@ import './App.css'
 function PricingCalculator() {
   const [heavyCount, setHeavyCount] = useState(0)
   const [lightCount, setLightCount] = useState(1)
-  const aircraftCount = heavyCount + lightCount
+  const [cadetCount, setCadetCount] = useState(0)
+  const aircraftCount = heavyCount + lightCount + cadetCount
   const [reportPeriod, setReportPeriod] = useState('monthly')
   // Multi-select reporting periods for producing quotes covering multiple plans
   const [selectedReportPeriods, setSelectedReportPeriods] = useState({
@@ -67,7 +68,10 @@ function PricingCalculator() {
   })
   
   // Base pricing per aircraft
-  const basePricePerAircraft = { light: 5000, heavy: 25000 }
+  const basePricePerAircraft = { light: 6000, heavy: 13000, cadet: 1500 }
+  
+  // Initial consultancy pricing per aircraft (by type)
+  const consultancyPricePerAircraft = { heavy: 25000, light: 20000, cadet: 5000 }
   
   // Module pricing
   const modulePrices = {
@@ -289,7 +293,7 @@ function PricingCalculator() {
   }, [])
 
   const calculateTotalPrice = () => {
-    let total = (currentBasePricePerAircraft.light * lightCount) + (currentBasePricePerAircraft.heavy * heavyCount)
+    let total = (currentBasePricePerAircraft.light * lightCount) + (currentBasePricePerAircraft.heavy * heavyCount) + (currentBasePricePerAircraft.cadet * cadetCount)
     
     Object.entries(selectedModules).forEach(([module, isSelected]) => {
       if (isSelected) {
@@ -976,7 +980,7 @@ function PricingCalculator() {
               {/* Light aircraft */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-slate-700">Light craft</span>
+                  <span className="text-sm font-medium text-slate-700">Light aircraft</span>
                   <span className="text-sm text-slate-600">Count: <span className="font-semibold text-orange-600">{lightCount}</span></span>
                 </div>
                 <div className="flex items-center space-x-4">
@@ -1002,6 +1006,41 @@ function PricingCalculator() {
                     variant="outline"
                     size="sm"
                     onClick={() => setLightCount(Math.min(100, lightCount + 1))}
+                    className="w-10 h-10 p-0"
+                  >
+                    +
+                  </Button>
+                </div>
+              </div>
+              {/* Cadet/Training aircraft */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-slate-700">Cadet/Training aircraft</span>
+                  <span className="text-sm text-slate-600">Count: <span className="font-semibold text-orange-600">{cadetCount}</span></span>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCadetCount(Math.max(0, cadetCount - 1))}
+                    className="w-10 h-10 p-0"
+                  >
+                    -
+                  </Button>
+                  <div className="flex-1">
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={cadetCount}
+                      onChange={(e) => setCadetCount(parseInt(e.target.value))}
+                      className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer slider"
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCadetCount(Math.min(100, cadetCount + 1))}
                     className="w-10 h-10 p-0"
                   >
                     +
@@ -1051,12 +1090,15 @@ function PricingCalculator() {
                       <div>
                         <span className="text-sm font-medium text-slate-800">{label}</span>
                         {isBasic && <span className="text-xs text-slate-500 block">Included in base plan</span>}
+                        {module === 'initialConsultancy' && (
+                          <span className="text-xs text-slate-500 block">Heavy $25,000 • Light $20,000 • Cadet $5,000 per aircraft</span>
+                        )}
                       </div>
                     </div>
                     <div className="text-right">
                       <span className="text-sm font-semibold text-slate-700">
-                        {isOneTime
-                          ? `$${price.toLocaleString()} one-time`
+                        {module === 'initialConsultancy'
+                          ? 'One-time (type-based)'
                           : price === 0
                             ? 'Included'
                             : `$${price}/aircraft`}
@@ -1091,6 +1133,10 @@ function PricingCalculator() {
                   <span>Base Plan - Heavy ({heavyCount} aircraft)</span>
                   <span className="font-semibold">${(currentBasePricePerAircraft.heavy * heavyCount).toLocaleString()}</span>
                 </div>
+                <div className="flex justify-between items-center">
+                  <span>Base Plan - Cadet/Training ({cadetCount} aircraft)</span>
+                  <span className="font-semibold">${(currentBasePricePerAircraft.cadet * cadetCount).toLocaleString()}</span>
+                </div>
               </div>
               <div className="text-xs text-white/80 space-y-1">
                 <div className="font-medium mb-2">Includes:</div>
@@ -1109,7 +1155,11 @@ function PricingCalculator() {
               return (
                 <div key={module} className="flex justify-between items-center">
                   <span className="text-sm">{dynamicModuleLabels[module]}</span>
-                  <span className="font-semibold">${currentModulePrices[module] * aircraftCount}</span>
+                  <span className="font-semibold">
+                    {module === 'initialConsultancy'
+                      ? `$${(consultancyPricePerAircraft.heavy * heavyCount + consultancyPricePerAircraft.light * lightCount + consultancyPricePerAircraft.cadet * cadetCount).toLocaleString()} (one-time)`
+                      : `$${(currentModulePrices[module] * aircraftCount).toLocaleString()}`}
+                  </span>
                 </div>
               )
             })}
@@ -1233,7 +1283,7 @@ function PricingCalculator() {
                 const total = discountedPrice * multiplier
                 const perAircraft = aircraftCount > 0 ? (total / aircraftCount).toFixed(0) : '0'
                 return (
-                  <div key={key} className="space-y-1">
+                  <div key={key} className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span>{label} total</span>
                       <span className="font-semibold">${total.toLocaleString()}</span>
@@ -1242,11 +1292,74 @@ function PricingCalculator() {
                       <span>{label} per aircraft</span>
                       <span>${perAircraft}</span>
                     </div>
+
+                    {/* Detailed Summary: Initial Fee */}
+                    <div className="mt-2 pt-2 border-t border-white/20">
+                      <div className="flex justify-between items-center">
+                        <span className="font-semibold">Total initial fee</span>
+                        <span className="font-semibold">${(
+                          (consultancyPricePerAircraft.heavy * heavyCount) +
+                          (consultancyPricePerAircraft.light * lightCount) +
+                          (consultancyPricePerAircraft.cadet * cadetCount)
+                        ).toLocaleString()}</span>
+                      </div>
+                      <div className="text-white/80 text-xs space-y-1">
+                        {heavyCount > 0 && (
+                          <div>Heavy: {heavyCount} × ${consultancyPricePerAircraft.heavy.toLocaleString()} = ${(
+                            consultancyPricePerAircraft.heavy * heavyCount
+                          ).toLocaleString()}</div>
+                        )}
+                        {lightCount > 0 && (
+                          <div>Light: {lightCount} × ${consultancyPricePerAircraft.light.toLocaleString()} = ${(
+                            consultancyPricePerAircraft.light * lightCount
+                          ).toLocaleString()}</div>
+                        )}
+                        {cadetCount > 0 && (
+                          <div>Cadet/Training: {cadetCount} × ${consultancyPricePerAircraft.cadet.toLocaleString()} = ${(
+                            consultancyPricePerAircraft.cadet * cadetCount
+                          ).toLocaleString()}</div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Detailed Summary: Recurring Base Cost by Type */}
+                    <div className="mt-2 pt-2 border-t border-white/20">
+                      <div className="flex justify-between items-center">
+                        <span className="font-semibold">{label} base cost</span>
+                        <span className="font-semibold">${(
+                          ((currentBasePricePerAircraft.heavy * heavyCount) +
+                           (currentBasePricePerAircraft.light * lightCount) +
+                           (currentBasePricePerAircraft.cadet * cadetCount)) * multiplier
+                        ).toLocaleString()}</span>
+                      </div>
+                      <div className="text-white/80 text-xs space-y-1">
+                        {heavyCount > 0 && (
+                          <div>Heavy: {heavyCount} × ${currentBasePricePerAircraft.heavy.toLocaleString()} = ${(
+                            currentBasePricePerAircraft.heavy * heavyCount * multiplier
+                          ).toLocaleString()}</div>
+                        )}
+                        {lightCount > 0 && (
+                          <div>Light: {lightCount} × ${currentBasePricePerAircraft.light.toLocaleString()} = ${(
+                            currentBasePricePerAircraft.light * lightCount * multiplier
+                          ).toLocaleString()}</div>
+                        )}
+                        {cadetCount > 0 && (
+                          <div>Cadet/Training: {cadetCount} × ${currentBasePricePerAircraft.cadet.toLocaleString()} = ${(
+                            currentBasePricePerAircraft.cadet * cadetCount * multiplier
+                          ).toLocaleString()}</div>
+                        )}
+                      </div>
+                      {key === 'monthly' && (
+                        <div className="text-white/80 text-xs mt-1">
+                          Next month recurring cost equals above base cost (excludes initial fee).
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )
               })}
               <div className="text-xs text-white/60">
-                Fleet: {aircraftCount} aircraft ({heavyCount} heavy, {lightCount} light)
+                Fleet: {aircraftCount} aircraft ({heavyCount} heavy, {lightCount} light, {cadetCount} cadet/training)
               </div>
             </div>
           </div>
@@ -1332,7 +1445,7 @@ function PricingCalculator() {
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs text-slate-600 mb-1">Light aircraft (default $5,000)</label>
+                      <label className="block text-xs text-slate-600 mb-1">Light aircraft (default $6,000)</label>
                       <input
                         type="number"
                         value={adminBasePricePerAircraft.light}
@@ -1341,11 +1454,20 @@ function PricingCalculator() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-600 mb-1">Heavy aircraft (default $25,000)</label>
+                      <label className="block text-xs text-slate-600 mb-1">Heavy aircraft (default $13,000)</label>
                       <input
                         type="number"
                         value={adminBasePricePerAircraft.heavy}
                         onChange={(e) => handleAdminBasePriceChange('heavy', e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-slate-600 mb-1">Cadet/Training aircraft (default $1,500)</label>
+                      <input
+                        type="number"
+                        value={adminBasePricePerAircraft.cadet}
+                        onChange={(e) => handleAdminBasePriceChange('cadet', e.target.value)}
                         className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                       />
                     </div>
@@ -1814,11 +1936,32 @@ function PricingCalculator() {
                 <div className="bg-slate-50 rounded-lg p-4">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-slate-700">Fleet Size:</span>
-                    <span className="font-semibold">{aircraftCount} aircraft ({heavyCount} heavy, {lightCount} light)</span>
+                    <span className="font-semibold">{aircraftCount} aircraft ({heavyCount} heavy, {lightCount} light, {cadetCount} cadet/training)</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-slate-700">Selected Modules:</span>
                     <span className="font-semibold">{Object.values(selectedModules).filter(Boolean).length} modules</span>
+                  </div>
+                  <div className="mt-2 text-sm text-slate-700">
+                    {Object.entries(selectedModules).filter(([key, val]) => val && dynamicModuleLabels[key]).length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {Object.entries(selectedModules)
+                          .filter(([key, val]) => val && dynamicModuleLabels[key])
+                          .map(([key]) => (
+                            <div key={key} className="flex items-center justify-between bg-white rounded-md px-3 py-2 border border-slate-200">
+                              <span>{dynamicModuleLabels[key]}</span>
+                              {key === 'initialConsultancy' && (
+                                <span className="text-xs text-slate-500">(one-time)</span>
+                              )}
+                              {key === 'basicMaintenance' && (
+                                <span className="text-xs text-slate-500">(base plan)</span>
+                              )}
+                            </div>
+                          ))}
+                      </div>
+                    ) : (
+                      <span className="text-slate-500">No modules selected</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1836,6 +1979,10 @@ function PricingCalculator() {
                       <span className="text-slate-700">Base Plan - Heavy ({heavyCount} aircraft)</span>
                       <span className="font-semibold">${(currentBasePricePerAircraft.heavy * heavyCount).toLocaleString()}</span>
                     </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-700">Base Plan - Cadet/Training ({cadetCount} aircraft)</span>
+                      <span className="font-semibold">${(currentBasePricePerAircraft.cadet * cadetCount).toLocaleString()}</span>
+                    </div>
                   </div>
                   
                   {Object.entries(selectedModules).map(([module, isSelected]) => {
@@ -1846,7 +1993,7 @@ function PricingCalculator() {
                         <span className="text-slate-700">{dynamicModuleLabels[module]}</span>
                         <span className="font-semibold">
                           {module === 'initialConsultancy'
-                            ? `$${currentModulePrices[module].toLocaleString()} (one-time)`
+                            ? `$${(consultancyPricePerAircraft.heavy * heavyCount + consultancyPricePerAircraft.light * lightCount + consultancyPricePerAircraft.cadet * cadetCount).toLocaleString()} (one-time)`
                             : `$${(currentModulePrices[module] * aircraftCount).toLocaleString()}`}
                         </span>
                       </div>
@@ -1943,30 +2090,44 @@ function PricingCalculator() {
                       // Add logo to PDF (smaller)
                       doc.addImage(logoImg, 'PNG', 20, 15, 20, 20);
                       
-                      // Simple company header
-                      doc.setFontSize(18);
-                      doc.setTextColor(0, 0, 0);
-                      doc.setFont('helvetica', 'bold');
-                      doc.text('AMMSTRO', 45, 25);
+                      const renderHeader = () => {
+                        // Simple company header
+                        doc.setFontSize(18);
+                        doc.setTextColor(0, 0, 0);
+                        doc.setFont('helvetica', 'bold');
+                        doc.text('AMMSTRO', 45, 25);
+                        
+                        doc.setFontSize(10);
+                        doc.setTextColor(100, 100, 100);
+                        doc.setFont('helvetica', 'normal');
+                        doc.text('Aircraft Maintenance Management System', 45, 30);
+                        
+                        // Simple separator line
+                        doc.setDrawColor(0, 0, 0);
+                        doc.setLineWidth(0.5);
+                        doc.line(20, 38, 190, 38);
+                        
+                        // Quote title
+                        doc.setFontSize(13);
+                        doc.setTextColor(0, 0, 0);
+                        doc.setFont('helvetica', 'bold');
+                        doc.text('QUOTATION', 20, 50);
+                      };
                       
-                      doc.setFontSize(10);
-                      doc.setTextColor(100, 100, 100);
-                      doc.setFont('helvetica', 'normal');
-                      doc.text('Aircraft Maintenance Management System', 45, 30);
-                      
-                      // Simple separator line
-                      doc.setDrawColor(0, 0, 0);
-                      doc.setLineWidth(0.5);
-                      doc.line(20, 38, 190, 38);
-                      
-                      // Quote title
-                      doc.setFontSize(13);
-                      doc.setTextColor(0, 0, 0);
-                      doc.setFont('helvetica', 'bold');
-                      doc.text('QUOTATION', 20, 50);
+                      renderHeader();
                       
                       // Quote details (compact)
                       let yPos = 60;
+                      const pageHeight = doc.internal.pageSize.getHeight();
+                      const bottomMargin = 20;
+                      const contentBottomLimit = pageHeight - bottomMargin;
+                      const ensureSpace = (needed = 10) => {
+                        if (yPos + needed > contentBottomLimit) {
+                          doc.addPage();
+                          renderHeader();
+                          yPos = 60;
+                        }
+                      };
                       doc.setFontSize(8);
                       doc.setTextColor(0, 0, 0);
                       doc.setFont('helvetica', 'normal');
@@ -1981,17 +2142,20 @@ function PricingCalculator() {
                       
                       // Pricing table (minimal)
                       yPos += 20;
+                      ensureSpace(15);
                       doc.setFontSize(11);
                       doc.setFont('helvetica', 'bold');
                       doc.text('Pricing', 20, yPos);
                       
                       yPos += 10;
+                      ensureSpace(10);
                       // Fleet composition note
                       doc.setFontSize(8);
                       doc.setFont('helvetica', 'normal');
-                      doc.text(`Fleet: ${aircraftCount} aircraft (${heavyCount} heavy, ${lightCount} light)`, 20, yPos);
+                      doc.text(`Fleet: ${aircraftCount} aircraft (${heavyCount} heavy, ${lightCount} light, ${cadetCount} cadet/training)`, 20, yPos);
                       yPos += 6;
                       // Table headers
+                      ensureSpace(10);
                       doc.setFontSize(8);
                       doc.setFont('helvetica', 'bold');
                       doc.text('Service', 20, yPos);
@@ -2008,15 +2172,24 @@ function PricingCalculator() {
                       doc.setFont('helvetica', 'normal');
                       doc.setFontSize(8);
                       if (lightCount > 0) {
+                        ensureSpace(6);
                         doc.text('Basic Maintenance - Light Aircraft', 20, yPos);
                         doc.text(`$${currentBasePricePerAircraft.light.toLocaleString()}`, 120, yPos);
                         doc.text(`$${(currentBasePricePerAircraft.light * lightCount).toLocaleString()}`, 160, yPos);
                         yPos += 6;
                       }
                       if (heavyCount > 0) {
+                        ensureSpace(6);
                         doc.text('Basic Maintenance - Heavy Aircraft', 20, yPos);
                         doc.text(`$${currentBasePricePerAircraft.heavy.toLocaleString()}`, 120, yPos);
                         doc.text(`$${(currentBasePricePerAircraft.heavy * heavyCount).toLocaleString()}`, 160, yPos);
+                        yPos += 6;
+                      }
+                      if (cadetCount > 0) {
+                        ensureSpace(6);
+                        doc.text('Basic Maintenance - Cadet/Training Aircraft', 20, yPos);
+                        doc.text(`$${currentBasePricePerAircraft.cadet.toLocaleString()}`, 120, yPos);
+                        doc.text(`$${(currentBasePricePerAircraft.cadet * cadetCount).toLocaleString()}`, 160, yPos);
                         yPos += 6;
                       }
                       
@@ -2025,16 +2198,47 @@ function PricingCalculator() {
                         if (value && key !== 'basicMaintenance') {
                           const moduleName = dynamicModuleLabels[key] || key;
                           const modulePrice = currentModulePrices[key] || 0;
+                          ensureSpace(6);
                           doc.text(moduleName, 20, yPos);
                           if (key === 'initialConsultancy') {
-                            // One-time fee, not multiplied by aircraft count
-                            doc.text(`$${modulePrice.toLocaleString()} (one-time)`, 120, yPos);
-                            doc.text(`$${modulePrice.toLocaleString()}`, 160, yPos);
+                            // One-time fee, type-based
+                            const consultancyTotal = (
+                              (consultancyPricePerAircraft.heavy * heavyCount) +
+                              (consultancyPricePerAircraft.light * lightCount) +
+                              (consultancyPricePerAircraft.cadet * cadetCount)
+                            );
+                            doc.text('Type-based (one-time)', 120, yPos);
+                            doc.text(`$${consultancyTotal.toLocaleString()}`, 160, yPos);
+                            yPos += 6;
+                            // Per-type breakdown rows (compact)
+                            doc.setFontSize(7);
+                            if (heavyCount > 0) {
+                              ensureSpace(5);
+                              doc.text('— Heavy', 20, yPos);
+                              doc.text(`$${consultancyPricePerAircraft.heavy.toLocaleString()}`, 120, yPos);
+                              doc.text(`$${(consultancyPricePerAircraft.heavy * heavyCount).toLocaleString()}`, 160, yPos);
+                              yPos += 5;
+                            }
+                            if (lightCount > 0) {
+                              ensureSpace(5);
+                              doc.text('— Light', 20, yPos);
+                              doc.text(`$${consultancyPricePerAircraft.light.toLocaleString()}`, 120, yPos);
+                              doc.text(`$${(consultancyPricePerAircraft.light * lightCount).toLocaleString()}`, 160, yPos);
+                              yPos += 5;
+                            }
+                            if (cadetCount > 0) {
+                              ensureSpace(5);
+                              doc.text('— Cadet/Training', 20, yPos);
+                              doc.text(`$${consultancyPricePerAircraft.cadet.toLocaleString()}`, 120, yPos);
+                              doc.text(`$${(consultancyPricePerAircraft.cadet * cadetCount).toLocaleString()}`, 160, yPos);
+                              yPos += 5;
+                            }
+                            doc.setFontSize(8);
                           } else {
                             doc.text(`$${modulePrice.toLocaleString()}`, 120, yPos);
                             doc.text(`$${(modulePrice * aircraftCount).toLocaleString()}`, 160, yPos);
+                            yPos += 6;
                           }
-                          yPos += 6;
                         }
                       });
                       
@@ -2047,7 +2251,13 @@ function PricingCalculator() {
                         const periodSubtotal = subtotalMonthly * multiplier;
                         const periodDiscount = discountMonthly * multiplier;
                         const periodFinal = finalMonthly * multiplier;
-                        const oneTimeFee = selectedModules.initialConsultancy ? (currentModulePrices.initialConsultancy || 0) : 0;
+                        const consultancyTotal = selectedModules.initialConsultancy ? (
+                          (consultancyPricePerAircraft.heavy * heavyCount) +
+                          (consultancyPricePerAircraft.light * lightCount) +
+                          (consultancyPricePerAircraft.cadet * cadetCount)
+                        ) : 0;
+                        const oneTimeFee = consultancyTotal;
+                        ensureSpace(50);
                         
                         // Subtotal line per period
                         yPos += 5;
@@ -2085,6 +2295,7 @@ function PricingCalculator() {
                       
                       // Terms & Conditions (two lines)
                         yPos += 15;
+                        ensureSpace(25);
                         doc.setFontSize(9);
                         doc.setFont('helvetica', 'bold');
                         doc.text('Terms & Conditions', 20, yPos);
@@ -2098,6 +2309,7 @@ function PricingCalculator() {
                        
                        // Footer
                        yPos += 15;
+                       ensureSpace(15);
                        doc.setLineWidth(0.3);
                        doc.line(20, yPos, 190, yPos);
                        
@@ -2105,6 +2317,16 @@ function PricingCalculator() {
                        doc.setFontSize(7);
                        doc.setFont('helvetica', 'normal');
                        doc.text('Contact: sales@ammstro.com | www.ammstro.com', 20, yPos);
+                      
+                      // Add page numbers
+                      const pageCount = doc.getNumberOfPages();
+                      for (let i = 1; i <= pageCount; i++) {
+                        doc.setPage(i);
+                        const ph = doc.internal.pageSize.getHeight();
+                        doc.setFontSize(8);
+                        doc.setTextColor(120,120,120);
+                        doc.text(`Page ${i} of ${pageCount}`, 190, ph - 6, { align: 'right' });
+                      }
                       
                       // Save the PDF
                       doc.save(`AMMSTRO-Quote-${Date.now()}.pdf`);
@@ -2118,29 +2340,43 @@ function PricingCalculator() {
                       console.warn('Logo failed to load, generating PDF without logo');
                       
                       // Generate complete PDF without logo
-                      doc.setFontSize(18);
-                      doc.setTextColor(0, 0, 0);
-                      doc.setFont('helvetica', 'bold');
-                      doc.text('AMMSTRO', 20, 25);
+                      const renderHeaderNoLogo = () => {
+                        doc.setFontSize(18);
+                        doc.setTextColor(0, 0, 0);
+                        doc.setFont('helvetica', 'bold');
+                        doc.text('AMMSTRO', 20, 25);
+                        
+                        doc.setFontSize(10);
+                        doc.setTextColor(100, 100, 100);
+                        doc.setFont('helvetica', 'normal');
+                        doc.text('Aircraft Maintenance Management System', 20, 30);
+                        
+                        // Simple separator line
+                        doc.setDrawColor(0, 0, 0);
+                        doc.setLineWidth(0.5);
+                        doc.line(20, 38, 190, 38);
+                        
+                        // Quote title
+                        doc.setFontSize(13);
+                        doc.setTextColor(0, 0, 0);
+                        doc.setFont('helvetica', 'bold');
+                        doc.text('QUOTATION', 20, 50);
+                      };
                       
-                      doc.setFontSize(10);
-                      doc.setTextColor(100, 100, 100);
-                      doc.setFont('helvetica', 'normal');
-                      doc.text('Aircraft Maintenance Management System', 20, 30);
-                      
-                      // Simple separator line
-                      doc.setDrawColor(0, 0, 0);
-                      doc.setLineWidth(0.5);
-                      doc.line(20, 38, 190, 38);
-                      
-                      // Quote title
-                      doc.setFontSize(13);
-                      doc.setTextColor(0, 0, 0);
-                      doc.setFont('helvetica', 'bold');
-                      doc.text('QUOTATION', 20, 50);
+                      renderHeaderNoLogo();
                       
                       // Quote details (compact)
                       let yPos = 60;
+                      const pageHeight = doc.internal.pageSize.getHeight();
+                      const bottomMargin = 20;
+                      const contentBottomLimit = pageHeight - bottomMargin;
+                      const ensureSpace = (needed = 10) => {
+                        if (yPos + needed > contentBottomLimit) {
+                          doc.addPage();
+                          renderHeaderNoLogo();
+                          yPos = 60;
+                        }
+                      };
                       doc.setFontSize(8);
                       doc.setTextColor(0, 0, 0);
                       doc.setFont('helvetica', 'normal');
@@ -2155,17 +2391,20 @@ function PricingCalculator() {
                       
                       // Pricing table (minimal)
                       yPos += 20;
+                      ensureSpace(15);
                       doc.setFontSize(11);
                       doc.setFont('helvetica', 'bold');
                       doc.text('Pricing', 20, yPos);
                       
                       yPos += 10;
+                      ensureSpace(10);
                       // Fleet composition note
                       doc.setFontSize(8);
                       doc.setFont('helvetica', 'normal');
-                      doc.text(`Fleet: ${aircraftCount} aircraft (${heavyCount} heavy, ${lightCount} light)`, 20, yPos);
+                      doc.text(`Fleet: ${aircraftCount} aircraft (${heavyCount} heavy, ${lightCount} light, ${cadetCount} cadet/training)`, 20, yPos);
                       yPos += 6;
                       // Table headers
+                      ensureSpace(10);
                       doc.setFontSize(8);
                       doc.setFont('helvetica', 'bold');
                       doc.text('Service', 20, yPos);
@@ -2178,15 +2417,24 @@ function PricingCalculator() {
                       
                       // Base maintenance (always included), split by type
                       if (lightCount > 0) {
+                        ensureSpace(6);
                         doc.text('Basic Maintenance - Light Aircraft', 20, yPos);
                         doc.text(`$${currentBasePricePerAircraft.light.toLocaleString()}`, 120, yPos);
                         doc.text(`$${(currentBasePricePerAircraft.light * lightCount).toLocaleString()}`, 160, yPos);
                         yPos += 6;
                       }
                       if (heavyCount > 0) {
+                        ensureSpace(6);
                         doc.text('Basic Maintenance - Heavy Aircraft', 20, yPos);
                         doc.text(`$${currentBasePricePerAircraft.heavy.toLocaleString()}`, 120, yPos);
                         doc.text(`$${(currentBasePricePerAircraft.heavy * heavyCount).toLocaleString()}`, 160, yPos);
+                        yPos += 6;
+                      }
+                      if (cadetCount > 0) {
+                        ensureSpace(6);
+                        doc.text('Basic Maintenance - Cadet/Training Aircraft', 20, yPos);
+                        doc.text(`$${currentBasePricePerAircraft.cadet.toLocaleString()}`, 120, yPos);
+                        doc.text(`$${(currentBasePricePerAircraft.cadet * cadetCount).toLocaleString()}`, 160, yPos);
                         yPos += 6;
                       }
                       
@@ -2195,15 +2443,46 @@ function PricingCalculator() {
                         if (value && key !== 'basicMaintenance') {
                           const moduleName = dynamicModuleLabels[key] || key;
                           const modulePrice = currentModulePrices[key] || 0;
+                          ensureSpace(6);
                           doc.text(moduleName, 20, yPos);
                           if (key === 'initialConsultancy') {
-                            doc.text(`$${modulePrice.toLocaleString()} (one-time)`, 120, yPos);
-                            doc.text(`$${modulePrice.toLocaleString()}`, 160, yPos);
+                            // One-time fee, type-based with per-type breakdown
+                            const consultancyTotal = (
+                              (consultancyPricePerAircraft.heavy * heavyCount) +
+                              (consultancyPricePerAircraft.light * lightCount) +
+                              (consultancyPricePerAircraft.cadet * cadetCount)
+                            );
+                            doc.text('Type-based (one-time)', 120, yPos);
+                            doc.text(`$${consultancyTotal.toLocaleString()}`, 160, yPos);
+                            yPos += 6;
+                            doc.setFontSize(7);
+                            if (heavyCount > 0) {
+                              ensureSpace(5);
+                              doc.text('— Heavy', 20, yPos);
+                              doc.text(`$${consultancyPricePerAircraft.heavy.toLocaleString()}`, 120, yPos);
+                              doc.text(`$${(consultancyPricePerAircraft.heavy * heavyCount).toLocaleString()}`, 160, yPos);
+                              yPos += 5;
+                            }
+                            if (lightCount > 0) {
+                              ensureSpace(5);
+                              doc.text('— Light', 20, yPos);
+                              doc.text(`$${consultancyPricePerAircraft.light.toLocaleString()}`, 120, yPos);
+                              doc.text(`$${(consultancyPricePerAircraft.light * lightCount).toLocaleString()}`, 160, yPos);
+                              yPos += 5;
+                            }
+                            if (cadetCount > 0) {
+                              ensureSpace(5);
+                              doc.text('— Cadet/Training', 20, yPos);
+                              doc.text(`$${consultancyPricePerAircraft.cadet.toLocaleString()}`, 120, yPos);
+                              doc.text(`$${(consultancyPricePerAircraft.cadet * cadetCount).toLocaleString()}`, 160, yPos);
+                              yPos += 5;
+                            }
+                            doc.setFontSize(8);
                           } else {
                             doc.text(`$${modulePrice.toLocaleString()}`, 120, yPos);
                             doc.text(`$${(modulePrice * aircraftCount).toLocaleString()}`, 160, yPos);
+                            yPos += 6;
                           }
-                          yPos += 6;
                         }
                       });
                       
@@ -2216,7 +2495,13 @@ function PricingCalculator() {
                         const periodSubtotal = subtotalMonthly * multiplier;
                         const periodDiscount = discountMonthly * multiplier;
                         const periodFinal = finalMonthly * multiplier;
-                        const oneTimeFee = selectedModules.initialConsultancy ? (currentModulePrices.initialConsultancy || 0) : 0;
+                        const consultancyTotal = selectedModules.initialConsultancy ? (
+                          (consultancyPricePerAircraft.heavy * heavyCount) +
+                          (consultancyPricePerAircraft.light * lightCount) +
+                          (consultancyPricePerAircraft.cadet * cadetCount)
+                        ) : 0;
+                        const oneTimeFee = consultancyTotal;
+                        ensureSpace(50);
                         
                         // Subtotal line
                         yPos += 5;
@@ -2253,6 +2538,7 @@ function PricingCalculator() {
                       
                       // Terms & Conditions
                       yPos += 15;
+                      ensureSpace(25);
                       doc.setFontSize(9);
                       doc.setFont('helvetica', 'bold');
                       doc.text('Terms & Conditions', 20, yPos);
@@ -2266,6 +2552,7 @@ function PricingCalculator() {
                      
                      // Footer
                      yPos += 15;
+                     ensureSpace(15);
                      doc.setLineWidth(0.3);
                      doc.line(20, yPos, 190, yPos);
                      
@@ -2273,6 +2560,16 @@ function PricingCalculator() {
                      doc.setFontSize(7);
                      doc.setFont('helvetica', 'normal');
                      doc.text('Contact: sales@ammstro.com | www.ammstro.com', 20, yPos);
+                      
+                      // Add page numbers
+                      const pageCount = doc.getNumberOfPages();
+                      for (let i = 1; i <= pageCount; i++) {
+                        doc.setPage(i);
+                        const ph = doc.internal.pageSize.getHeight();
+                        doc.setFontSize(8);
+                        doc.setTextColor(120,120,120);
+                        doc.text(`Page ${i} of ${pageCount}`, 190, ph - 6, { align: 'right' });
+                      }
                       
                       doc.save(`AMMSTRO-Quote-${Date.now()}.pdf`);
                       setShowQuoteModal(false);
